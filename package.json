@@ -1,0 +1,22 @@
+{
+  "name": "bitmaker",
+  "version": "1.0.0",
+  "description": "my simple music api",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ravindra-souda/bitmaker.git"
+  },
+  "author": "RAVINDRA Soudakar",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ravindra-souda/bitmaker/issues"
+  },
+  "homepage": "https://github.com/ravindra-souda/bitmaker#readme",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
+}
