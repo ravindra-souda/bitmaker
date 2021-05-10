@@ -3,6 +3,10 @@
 const express = require('express')
 const cookieParser = require('cookie-parser')
 const logger = require('morgan')
+const dotenv = require('dotenv')
+
+const envFile = process.env.NODE_ENV ? `.env.${process.env.NODE_ENV}` : '.env'
+dotenv.config({ path: envFile })
 
 const app = express()
 
