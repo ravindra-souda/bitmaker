@@ -9,13 +9,15 @@ dotenv.config({ path: envFile })
 
 var indexRouter = require('./routes/index')
 var usersRouter = require('./routes/users')
+const { checkHeaders, checkJson } = require('./api/middleware/checkRequest')
 
 var app = express()
 
 app.disable('x-powered-by')
 
 app.use(logger('dev'))
-app.use(express.json())
+app.use(checkHeaders)
+app.use(express.json({ verify: checkJson }))
 app.use(express.urlencoded({ extended: false }))
 app.use(cookieParser())
 app.use(express.static(path.join(__dirname, 'public')))
