@@ -22,4 +22,19 @@ module.exports = {
       throw new SyntaxError('Invalid JSON submitted')
     }
   },
+
+  trimJson: (req, res, next) => {
+    let trimmedEntries = Object.entries(req.body).map((element) => {
+      let [key, value] = element
+      if (typeof value === 'string') {
+        return [key, value.trim()]
+      }
+      if (value instanceof Array) {
+        return [key, value.map((v) => v.trim())]
+      }
+      return [key, value]
+    })
+    req.body = Object.fromEntries(trimmedEntries)
+    next()
+  },
 }
