@@ -4,6 +4,8 @@ const express = require('express')
 const cookieParser = require('cookie-parser')
 const logger = require('morgan')
 const dotenv = require('dotenv')
+
+const router = require('./routes/api')
 const {
   checkHeaders,
   checkJson,
@@ -23,5 +25,7 @@ app.use(express.json({ verify: checkJson }))
 app.use(trimJson)
 app.use(express.urlencoded({ extended: false }))
 app.use(cookieParser())
+
+app.use('/api', router)
 
 module.exports = app
