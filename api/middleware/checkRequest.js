@@ -13,6 +13,9 @@ module.exports = {
   },
 
   checkJson: (req, res, buf) => {
+    if (req.method === 'GET' && buf.length === 0) {
+      return
+    }
     try {
       JSON.parse(buf)
     } catch {

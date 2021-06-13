@@ -154,6 +154,224 @@ describe('POST /bands', () => {
   })
 })
 
+const getPayloads = {
+  validCompleteBand: {
+    name: 'Oasis',
+    formationYear: 1991,
+    bio:
+      'Oasis est un groupe de rock alternatif britannique, originaire de Manchester. Initialement nommé The Rain, le groupe est au départ composé de Liam Gallagher (chant), Paul « Bonehead » Arthurs (guitare), Paul « Guigsy » McGuigan (basse) et Tony McCarroll (batterie), rapidement rejoint par Noel (guitare principale et chant), le frère aîné de Liam.',
+    tags: ['britpop'],
+  },
+  validAnotherBand: {
+    name: 'Blur',
+    formationYear: 1989,
+    bio:
+      'Blur est un groupe de rock britannique, originaire de Londres, en Angleterre. Il est composé du chanteur Damon Albarn, du guitariste Graham Coxon, du bassiste Alex James et du batteur Dave Rowntree.',
+    tags: ['britpop'],
+  },
+  validBandCollection: new Map([
+    [
+      1,
+      {
+        name: 'Air',
+        formationYear: 1996,
+        tags: ['french-touch'],
+      },
+    ],
+    [
+      4,
+      {
+        name: 'Justice',
+        formationYear: 2003,
+        tags: ['french-touch', 'electro'],
+      },
+    ],
+    [
+      2,
+      {
+        name: 'Cassius',
+        formationYear: 1996,
+        tags: ['french-touch'],
+      },
+    ],
+    [
+      3,
+      {
+        name: 'Etienne de Crécy',
+        formationYear: 1992,
+        tags: ['french-touch'],
+      },
+    ],
+    [
+      5,
+      {
+        name: 'Kavinsky',
+        formationYear: 2006,
+        tags: ['french-touch'],
+      },
+    ],
+  ]),
+}
+
+describe('GET /bands', () => {
+  beforeAll(async () => {
+    await Band.deleteMany({}, (err) => {
+      if (err) console.log(err)
+    })
+    const res = await request(app)
+      .post('/api/bands')
+      .send(getPayloads.validCompleteBand)
+    postedBandId = res.body._id
+    postedBandCode = res.body.code
+    await request(app).post('/api/bands').send(getPayloads.validAnotherBand)
+    getPayloads.validBandCollection.forEach(async (band) => {
+      await request(app).post('/api/bands').send(band)
+    })
+  })
+
+  test('search an existing band with id', async () => {
+    const res = await request(app).get('/api/bands/' + postedBandId)
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([getPayloads.validCompleteBand])
+  })
+  test('search an existing band with code', async () => {
+    const res = await request(app).get('/api/bands/' + postedBandCode)
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([getPayloads.validCompleteBand])
+  })
+  test('search an existing band with name', async () => {
+    let res = await request(app).get(
+      '/api/bands?name=' + getPayloads.validCompleteBand.name.slice(1, 4)
+    )
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([getPayloads.validCompleteBand])
+    res = await request(app).get(
+      '/api/bands?name=' +
+        getPayloads.validCompleteBand.name.slice(1, 4).toUpperCase()
+    )
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([getPayloads.validCompleteBand])
+  })
+  test('search existing bands with formationYear', async () => {
+    const res = await request(app).get('/api/bands?formationYear=1996')
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([
+      getPayloads.validBandCollection.get(1),
+      getPayloads.validBandCollection.get(2),
+    ])
+  })
+  test('search two existing bands with same tag', async () => {
+    const res = await request(app).get(
+      '/api/bands?tags=' + getPayloads.validCompleteBand.tags
+    )
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([
+      getPayloads.validAnotherBand,
+      getPayloads.validCompleteBand,
+    ])
+  })
+  test('search existing bands among several tags', async () => {
+    const res = await request(app).get(`/api/bands?tags=electro,britpop`)
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([
+      getPayloads.validAnotherBand,
+      getPayloads.validBandCollection.get(4),
+      getPayloads.validCompleteBand,
+    ])
+  })
+  test('use parameter limit to get 3 bands out of 5', async () => {
+    const res = await request(app).get('/api/bands?tags=french-touch&limit=3')
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([
+      getPayloads.validBandCollection.get(1),
+      getPayloads.validBandCollection.get(2),
+      getPayloads.validBandCollection.get(3),
+    ])
+  })
+  test('use parameter skip to get the last 2 bands', async () => {
+    const res = await request(app).get('/api/bands?tags=french-touch&skip=3')
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([
+      getPayloads.validBandCollection.get(4),
+      getPayloads.validBandCollection.get(5),
+    ])
+  })
+  test('sort results in reverse order based on formationYear, then on name', async () => {
+    const res = await request(app).get(
+      '/api/bands?tags=french-touch&sort=-formationYear,name'
+    )
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([
+      getPayloads.validBandCollection.get(5),
+      getPayloads.validBandCollection.get(4),
+      getPayloads.validBandCollection.get(1),
+      getPayloads.validBandCollection.get(2),
+      getPayloads.validBandCollection.get(3),
+    ])
+  })
+  test('combine limit, skip and sort parameters', async () => {
+    const res = await request(app).get(
+      '/api/bands?tags=french-touch&limit=3&skip=1&sort=formationYear,-name'
+    )
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([
+      getPayloads.validBandCollection.get(2),
+      getPayloads.validBandCollection.get(1),
+      getPayloads.validBandCollection.get(4),
+    ])
+  })
+  test('throw error 404 on band not found', async () => {
+    let res = await request(app).get(
+      '/api/bands/' + postedBandId.slice(1) + postedBandId.charAt(0)
+    )
+    expect(res.statusCode).toEqual(404)
+    expect(res.body).toHaveProperty('error')
+    res = await request(app).get('/api/bands/dummy')
+    expect(res.statusCode).toEqual(404)
+    expect(res.body).toHaveProperty('error')
+    res = await request(app).get('/api/bands?name=dummy')
+    expect(res.statusCode).toEqual(404)
+    expect(res.body).toHaveProperty('error')
+  })
+  test.each(['dummy', '', ' '])(
+    'throw error 400 on invalid formationYear',
+    async (value) => {
+      let res = await request(app).get('/api/bands?formationYear=' + value)
+      expect(res.statusCode).toEqual(400)
+      expect(res.body).toHaveProperty('invalidNumericFilters', {
+        formationYear: value.trim(),
+      })
+    }
+  )
+  test('throw error 400 on invalid filters', async () => {
+    const res = await request(app).get('/api/bands?dummy=value')
+    expect(res.statusCode).toEqual(400)
+    expect(res.body).toHaveProperty('invalidFilters', ['dummy'])
+  })
+  test('throw error 400 on invalid limit and skip parameters', async () => {
+    let res = await request(app).get('/api/bands?tags=french-touch&limit=-1')
+    expect(res.statusCode).toEqual(400)
+    res = await request(app).get('/api/bands?tags=french-touch&skip=1.5')
+    expect(res.statusCode).toEqual(400)
+    res = await request(app).get('/api/bands?tags=french-touch&limit=a&skip=b')
+    expect(res.statusCode).toEqual(400)
+  })
+  test('throw error 400 on limit parameter too high', async () => {
+    const res = await request(app).get(
+      '/api/bands?tags=french-touch&limit=' +
+        (parseInt(process.env.MONGODB_LIMIT_RESULTS) + 1)
+    )
+    expect(res.statusCode).toEqual(400)
+  })
+  test('throw error 400 on invalid sort parameters', async () => {
+    const res = await request(app).get(
+      '/api/bands?tags=french-touch&sort=dummy'
+    )
+    expect(res.statusCode).toEqual(400)
+    expect(res.body).toHaveProperty('invalidSortables', ['dummy'])
+  })
+})
+
 const patchPayloads = {
   validCompleteBand: {
     name: 'Gorillaz',

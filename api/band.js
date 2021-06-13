@@ -2,11 +2,40 @@
 
 const Band = require('./models/Band')
 const jsonQuery = require('json-query')
+const buildFilters = require('./helpers/buildFilters')
 const connect = require('./helpers/connect')
 const checkModel = require('./helpers/checkModel')
 const fillModel = require('./helpers/fillModel')
 
 module.exports = {
+  get: async (req, res) => {
+    if (!(await connect(res))) {
+      return
+    }
+    const { filters, options } = buildFilters(req, res, Band)
+
+    if (!filters || !options) {
+      return
+    }
+
+    Band.find(filters, null, options, (err, docs) => {
+      if (err) {
+        res.status(500).json({
+          error: 'Internal mongoDB error',
+        })
+        return
+      }
+      if (docs.length === 0) {
+        res.status(404).json({
+          error: 'No band found with the given filters',
+          filters: filters,
+        })
+        return
+      }
+      res.status(200).json(docs)
+    })
+  },
+
   post: async (req, res) => {
     if (!(await connect(res))) {
       return
