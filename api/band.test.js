@@ -154,6 +154,292 @@ describe('POST /bands', () => {
   })
 })
 
+const patchPayloads = {
+  validCompleteBand: {
+    name: 'Gorillaz',
+    formationYear: 1998,
+    bio: '2D, Murdoc, Russel, Noodle',
+    tags: ['electro'],
+  },
+  validBandToUpdate: {
+    _id: null,
+    name: '   Gorillaz without Murdoc ',
+    formationYear: 2018,
+    bio: '2D, Ace, Russel, Noodle',
+    tags: ['electro  ', 'trip HOP'],
+  },
+  validMinimalUpdateWithId: {
+    _id: null,
+    bio: 'Damon Albarn & Jamie Hewlett',
+  },
+  validMinimalUpdateWithCode: {
+    code: null,
+    bio: 'Damon Albarn & Jamie Hewlett',
+  },
+  expectedMinimalUpdate: {
+    name: 'Gorillaz',
+    formationYear: 1998,
+    bio: 'Damon Albarn & Jamie Hewlett',
+    tags: ['electro'],
+  },
+  validDuplicateTagsUpdate: {
+    _id: null,
+    tags: ['trip hop', 'TRIP HOP', ' trip hop   '],
+  },
+  expectedDedupTagsUpdate: {
+    tags: ['trip-hop'],
+  },
+  invalidMissingId: {
+    _id: undefined,
+    name: 'Gorillaz missing Murdoc',
+    formationYear: 2018,
+    bio: '2D, Ace, Russel, Noodle',
+    tags: ['electro'],
+  },
+  invalidMissingCode: {
+    code: undefined,
+    name: 'Gorillaz missing Murdoc',
+    formationYear: 2018,
+    bio: '2D, Ace, Russel, Noodle',
+    tags: ['electro'],
+  },
+  invalidBothIdAndCode: {
+    _id: null,
+    code: null,
+    name: 'Gorillaz missing Murdoc',
+    formationYear: 2018,
+    bio: '2D, Ace, Russel, Noodle',
+    tags: ['electro'],
+  },
+  invalidMismatchingId: {
+    _id: 'dummy',
+    name: 'Gorillaz mismatching Ace',
+    formationYear: 2018,
+    bio: '2D, Ace, Russel, Noodle',
+    tags: ['electro'],
+  },
+  invalidMismatchingCode: {
+    code: 'dummy',
+    name: 'Gorillaz mismatching Ace',
+    formationYear: 2018,
+    bio: '2D, Ace, Russel, Noodle',
+    tags: ['electro'],
+  },
+  invalidEmptyName: {
+    _id: null,
+    name: '',
+    formationYear: 2018,
+    bio: '2D, Ace, Russel, Noodle',
+    tags: ['electro'],
+  },
+  invalidFormationYear: {
+    _id: null,
+    name: 'Decimal Gorillaz',
+    formationYear: 1998.8,
+    bio: '2D, Ace, Russel, Noodle',
+    tags: ['electro'],
+  },
+  invalidMinFormationYear: {
+    _id: null,
+    name: 'Gorillaz from the Past',
+    formationYear: 1898,
+    bio: '2D, Ace, Russel, Noodle',
+    tags: ['electro'],
+  },
+  invalidMaxFormationYear: {
+    _id: null,
+    name: 'Gorillaz tomorrow',
+    formationYear: new Date().getFullYear() + 1,
+    bio: '2D, Ace, Russel, Noodle',
+    tags: ['electro'],
+  },
+  invalidUnknownField: {
+    _id: null,
+    name: 'Gorillaz tomorrow',
+    formationYear: new Date().getFullYear() + 1,
+    bio: '2D, Ace, Russel, Noodle',
+    tags: ['electro'],
+    dummy: false,
+  },
+  invalidBadId: {
+    _id: null,
+    name: 'Borillaz',
+    formationYear: 1898,
+    bio: '2D, Ace, Russel, Noodle',
+    tags: ['electro'],
+  },
+  invalidUnknownId: {
+    _id: null,
+    name: 'Gorillaz ?',
+    formationYear: 1898,
+    bio: '2D, Ace, Russel, Noodle',
+    tags: ['electro'],
+  },
+  invalidUnknownCode: {
+    code: null,
+    name: 'Gorillaz ?',
+    formationYear: 1898,
+    bio: '2D, Ace, Russel, Noodle',
+    tags: ['electro'],
+  },
+  expectedUpdatedBand: {},
+}
+
+patchPayloads.expectedUpdatedBand = {
+  ...patchPayloads.validBandToUpdate,
+  name: 'Gorillaz without Murdoc',
+  tags: ['electro', 'trip-hop'],
+}
+
+describe('PATCH /bands', () => {
+  beforeEach(async () => {
+    await Band.deleteMany({}, (err) => {
+      if (err) console.log(err)
+    })
+    const res = await request(app)
+      .post('/api/bands')
+      .send(patchPayloads.validCompleteBand)
+    postedBandId = res.body._id
+    postedBandCode = res.body.code
+  })
+
+  test('update a band', async () => {
+    patchPayloads.validBandToUpdate._id = postedBandId
+    patchPayloads.expectedUpdatedBand._id = postedBandId
+    const res = await request(app)
+      .patch('/api/bands/' + postedBandId)
+      .send(patchPayloads.validBandToUpdate)
+    expect(res.statusCode).toEqual(200)
+    expect(res.body.updatedBand).toMatchObject(
+      patchPayloads.expectedUpdatedBand
+    )
+  })
+  test('update a band with id and minimal information', async () => {
+    patchPayloads.validMinimalUpdateWithId._id = postedBandId
+    const res = await request(app)
+      .patch('/api/bands/' + postedBandId)
+      .send(patchPayloads.validMinimalUpdateWithId)
+    expect(res.statusCode).toEqual(200)
+    expect(res.body.updatedBand).toMatchObject(
+      patchPayloads.expectedMinimalUpdate
+    )
+  })
+  test('update a band with code and minimal information', async () => {
+    patchPayloads.validMinimalUpdateWithCode.code = postedBandCode
+    const res = await request(app)
+      .patch('/api/bands/' + postedBandCode)
+      .send(patchPayloads.validMinimalUpdateWithCode)
+    expect(res.statusCode).toEqual(200)
+    expect(res.body.updatedBand).toMatchObject(
+      patchPayloads.expectedMinimalUpdate
+    )
+  })
+  test('dedup tags on band update', async () => {
+    patchPayloads.validDuplicateTagsUpdate._id = postedBandId
+    const res = await request(app)
+      .patch('/api/bands/' + postedBandId)
+      .send(patchPayloads.validDuplicateTagsUpdate)
+    expect(res.statusCode).toEqual(200)
+    expect(res.body.updatedBand).toMatchObject(
+      patchPayloads.expectedDedupTagsUpdate
+    )
+  })
+  test('throw error 400 on missing id', async () => {
+    const res = await request(app)
+      .patch('/api/bands/' + postedBandId)
+      .send(patchPayloads.invalidMissingId)
+    expect(res.statusCode).toEqual(400)
+  })
+  test('throw error 400 on missing code', async () => {
+    const res = await request(app)
+      .patch('/api/bands/' + postedBandCode)
+      .send(patchPayloads.invalidMissingCode)
+    expect(res.statusCode).toEqual(400)
+  })
+  test('throw error 400 when JSON contains both id and code', async () => {
+    patchPayloads.invalidBothIdAndCode._id = postedBandId
+    patchPayloads.invalidBothIdAndCode.code = postedBandCode
+    const res = await request(app)
+      .patch('/api/bands/' + postedBandId)
+      .send(patchPayloads.invalidBothIdAndCode)
+    expect(res.statusCode).toEqual(400)
+  })
+  test('throw error 400 on mismatching id', async () => {
+    const res = await request(app)
+      .patch('/api/bands/' + postedBandId)
+      .send(patchPayloads.invalidMismatchingId)
+    expect(res.statusCode).toEqual(400)
+  })
+  test('throw error 400 on mismatching code', async () => {
+    const res = await request(app)
+      .patch('/api/bands/' + postedBandCode)
+      .send(patchPayloads.invalidMismatchingCode)
+    expect(res.statusCode).toEqual(400)
+  })
+  test('throw error 400 on empty name', async () => {
+    patchPayloads.invalidEmptyName._id = postedBandId
+    const res = await request(app)
+      .patch('/api/bands/' + postedBandId)
+      .send(patchPayloads.invalidEmptyName)
+    expect(res.statusCode).toEqual(400)
+  })
+  test('throw error 400 on invalid formationYear', async () => {
+    patchPayloads.invalidFormationYear._id = postedBandId
+    const res = await request(app)
+      .patch('/api/bands/' + postedBandId)
+      .send(patchPayloads.invalidFormationYear)
+    expect(res.statusCode).toEqual(400)
+  })
+  test('throw error 400 on formationYear before 1900', async () => {
+    patchPayloads.invalidMinFormationYear._id = postedBandId
+    const res = await request(app)
+      .patch('/api/bands/' + postedBandId)
+      .send(patchPayloads.invalidMinFormationYear)
+    expect(res.statusCode).toEqual(400)
+  })
+  test(
+    'throw error 400 on formationYear after ' + new Date().getFullYear(),
+    async () => {
+      patchPayloads.invalidMaxFormationYear._id = postedBandId
+      const res = await request(app)
+        .patch('/api/bands/' + postedBandId)
+        .send(patchPayloads.invalidMaxFormationYear)
+      expect(res.statusCode).toEqual(400)
+    }
+  )
+  test('throw error 400 on unknown posted fields', async () => {
+    patchPayloads.invalidUnknownField._id = postedBandId
+    const res = await request(app)
+      .patch('/api/bands/' + postedBandId)
+      .send(patchPayloads.invalidUnknownField)
+    expect(res.statusCode).toEqual(400)
+    expect(res.body.invalidFields).toEqual(['dummy'])
+  })
+  test('throw error 400 on invalid id', async () => {
+    patchPayloads.invalidBadId._id = postedBandId.slice(1)
+    const res = await request(app)
+      .patch('/api/bands/' + patchPayloads.invalidBadId._id)
+      .send(patchPayloads.invalidBadId)
+    expect(res.statusCode).toEqual(400)
+  })
+  test('throw error 404 on unknown id', async () => {
+    patchPayloads.invalidUnknownId._id =
+      postedBandId.slice(1) + postedBandId.charAt(0)
+    const res = await request(app)
+      .patch('/api/bands/' + patchPayloads.invalidUnknownId._id)
+      .send(patchPayloads.invalidUnknownId)
+    expect(res.statusCode).toEqual(404)
+  })
+  test('throw error 404 on unknown code', async () => {
+    patchPayloads.invalidUnknownCode.code =
+      postedBandCode.slice(1) + postedBandCode.charAt(0)
+    const res = await request(app)
+      .patch('/api/bands/' + patchPayloads.invalidUnknownCode.code)
+      .send(patchPayloads.invalidUnknownCode)
+    expect(res.statusCode).toEqual(404)
+  })
+})
+
 const deletePayloads = {
   validCompleteBand: {
     name: 'The Chemical Brothers',
