@@ -7,15 +7,15 @@ const dotenv = require('dotenv')
 const envFile = process.env.NODE_ENV ? `.env.${process.env.NODE_ENV}` : '.env'
 dotenv.config({ path: envFile })
 
-var indexRouter = require('./routes/index')
-var usersRouter = require('./routes/users')
+const indexRouter = require('./routes/index')
+const apiRouter = require('./routes/api')
 const {
   checkHeaders,
   checkJson,
   trimJson,
 } = require('./api/middleware/checkRequest')
 
-var app = express()
+const app = express()
 
 app.disable('x-powered-by')
 
@@ -28,6 +28,6 @@ app.use(cookieParser())
 app.use(express.static(path.join(__dirname, 'public')))
 
 app.use('/', indexRouter)
-app.use('/users', usersRouter)
+app.use('/api', apiRouter)
 
 module.exports = app
