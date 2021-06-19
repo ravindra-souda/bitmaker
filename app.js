@@ -9,7 +9,11 @@ dotenv.config({ path: envFile })
 
 var indexRouter = require('./routes/index')
 var usersRouter = require('./routes/users')
-const { checkHeaders, checkJson } = require('./api/middleware/checkRequest')
+const {
+  checkHeaders,
+  checkJson,
+  trimJson,
+} = require('./api/middleware/checkRequest')
 
 var app = express()
 
@@ -18,6 +22,7 @@ app.disable('x-powered-by')
 app.use(logger('dev'))
 app.use(checkHeaders)
 app.use(express.json({ verify: checkJson }))
+app.use(trimJson)
 app.use(express.urlencoded({ extended: false }))
 app.use(cookieParser())
 app.use(express.static(path.join(__dirname, 'public')))
