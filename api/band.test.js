@@ -5,9 +5,10 @@ const request = require('supertest')
 const slugify = require('./helpers/slugify')
 const app = require('../app')
 const Band = require('./models/Band')
-const connect = require('./helpers/connect')
 
-let postedBandId, postedBandCode
+let postedBandId,
+  postedBandCode,
+  bandIdsToClear = []
 const postPayloads = {
   validCompleteBand: {
     name: ' Daft Punk ',
@@ -74,15 +75,6 @@ postPayloads.expectedMinimalBand = {
   code: slugify(postPayloads.validMinimalBand.name),
 }
 
-beforeAll(async () => {
-  if (!(await connect())) {
-    return
-  }
-  Band.deleteMany({}, (err) => {
-    if (err) console.log(err)
-  })
-})
-
 describe('POST /bands', () => {
   test('create a band with minimal information', async () => {
     const res = await request(app)
@@ -90,6 +82,7 @@ describe('POST /bands', () => {
       .send(postPayloads.validMinimalBand)
     expect(res.statusCode).toEqual(201)
     expect(res.body).toMatchObject(postPayloads.expectedMinimalBand)
+    bandIdsToClear.push(res.body._id)
   })
   test('create a band with full information', async () => {
     const res = await request(app)
@@ -97,6 +90,7 @@ describe('POST /bands', () => {
       .send(postPayloads.validCompleteBand)
     expect(res.statusCode).toEqual(201)
     expect(res.body).toMatchObject(postPayloads.expectedCompleteBand)
+    bandIdsToClear.push(res.body._id)
   })
   test('dedup tags on band creation', async () => {
     const res = await request(app)
@@ -104,6 +98,7 @@ describe('POST /bands', () => {
       .send(postPayloads.validDuplicateTagsBand)
     expect(res.statusCode).toEqual(201)
     expect(res.body).toMatchObject(postPayloads.expectedDedupTagsBand)
+    bandIdsToClear.push(res.body._id)
   })
   test('throw error 400 on missing band name key', async () => {
     const res = await request(app)
@@ -151,6 +146,13 @@ describe('POST /bands', () => {
       .send(postPayloads.invalidUnknownField)
     expect(res.statusCode).toEqual(400)
     expect(res.body.invalidFields).toEqual(['dummy'])
+  })
+
+  afterAll(async () => {
+    await Band.deleteMany({ $or: [{ _id: bandIdsToClear }] }, (err) => {
+      if (err) console.log(err)
+    })
+    bandIdsToClear = []
   })
 })
 
@@ -215,17 +217,16 @@ const getPayloads = {
 
 describe('GET /bands', () => {
   beforeAll(async () => {
-    await Band.deleteMany({}, (err) => {
-      if (err) console.log(err)
-    })
     const res = await request(app)
       .post('/api/bands')
       .send(getPayloads.validCompleteBand)
     postedBandId = res.body._id
     postedBandCode = res.body.code
+    bandIdsToClear.push(res.body._id)
     await request(app).post('/api/bands').send(getPayloads.validAnotherBand)
     getPayloads.validBandCollection.forEach(async (band) => {
-      await request(app).post('/api/bands').send(band)
+      let res = await request(app).post('/api/bands').send(band)
+      bandIdsToClear.push(res.body._id)
     })
   })
 
@@ -370,6 +371,13 @@ describe('GET /bands', () => {
     expect(res.statusCode).toEqual(400)
     expect(res.body).toHaveProperty('invalidSortables', ['dummy'])
   })
+
+  afterAll(async () => {
+    await Band.deleteMany({ $or: [{ _id: bandIdsToClear }] }, (err) => {
+      if (err) console.log(err)
+    })
+    bandIdsToClear = []
+  })
 })
 
 const patchPayloads = {
@@ -511,7 +519,7 @@ patchPayloads.expectedUpdatedBand = {
 
 describe('PATCH /bands', () => {
   beforeEach(async () => {
-    await Band.deleteMany({}, (err) => {
+    await Band.deleteMany({ code: postedBandCode }, (err) => {
       if (err) console.log(err)
     })
     const res = await request(app)
@@ -519,6 +527,7 @@ describe('PATCH /bands', () => {
       .send(patchPayloads.validCompleteBand)
     postedBandId = res.body._id
     postedBandCode = res.body.code
+    bandIdsToClear.push(postedBandId)
   })
 
   test('update a band', async () => {
@@ -656,6 +665,13 @@ describe('PATCH /bands', () => {
       .send(patchPayloads.invalidUnknownCode)
     expect(res.statusCode).toEqual(404)
   })
+
+  afterAll(async () => {
+    await Band.deleteMany({ $or: [{ _id: bandIdsToClear }] }, (err) => {
+      if (err) console.log(err)
+    })
+    bandIdsToClear = []
+  })
 })
 
 const deletePayloads = {
@@ -719,7 +735,7 @@ const deletePayloads = {
 
 describe('DELETE /bands', () => {
   beforeEach(async () => {
-    await Band.deleteMany({}, (err) => {
+    await Band.deleteMany({ code: postedBandCode }, (err) => {
       if (err) console.log(err)
     })
     const res = await request(app)
@@ -727,6 +743,7 @@ describe('DELETE /bands', () => {
       .send(deletePayloads.validCompleteBand)
     postedBandId = res.body._id
     postedBandCode = res.body.code
+    bandIdsToClear.push(postedBandId)
   })
 
   test('delete a band with id', async () => {
@@ -815,5 +832,8 @@ describe('DELETE /bands', () => {
 })
 
 afterAll(async () => {
+  await Band.deleteMany({ $or: [{ _id: bandIdsToClear }] }, (err) => {
+    if (err) console.log(err)
+  })
   await mongoose.connection.close()
 })

@@ -2,6 +2,7 @@
 
 const express = require('express')
 const router = express.Router()
+const albumController = require('../api/album')
 const bandController = require('../api/band')
 
 router.get('/bands/:key', (req, res) => {
@@ -18,6 +19,10 @@ router.patch('/bands/:key', (req, res) => {
 })
 router.delete('/bands/:key', (req, res) => {
   bandController.delete(req, res)
+})
+
+router.post('/bands/:key/albums', (req, res) => {
+  albumController.post(req, res)
 })
 
 module.exports = router
