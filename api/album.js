@@ -5,7 +5,9 @@ const Band = require('./models/Band')
 const jsonQuery = require('json-query')
 const buildFilters = require('./helpers/buildFilters')
 const connect = require('./helpers/connect')
+const checkModel = require('./helpers/checkModel')
 const fillModel = require('./helpers/fillModel')
+const mongoose = require('mongoose')
 
 module.exports = {
   post: async (req, res) => {
@@ -65,6 +67,60 @@ module.exports = {
       // populate the related band (translate the band's object id to the actual document)
       savedAlbum.populate('band', (err, doc) => {
         res.status(201).json(doc)
+      })
+    })
+  },
+
+  delete: async (req, res) => {
+    const albumToDelete = await checkModel(req, res, Album, 'title')
+
+    if (!albumToDelete) {
+      return
+    }
+
+    const relatedBand = await Band.findById(albumToDelete.band)
+
+    // additionnal checks if a band is provided
+    if (req.params.bandKey) {
+      let filter = mongoose.isValidObjectId(req.params.bandKey)
+        ? { _id: req.params.bandKey }
+        : { code: req.params.bandKey }
+      const providedBand = await Band.findOne(filter).exec()
+      if (!providedBand) {
+        res.status(404).json({
+          error: `No band recorded with the provided _id or code: ${req.params.bandKey}`,
+        })
+        return
+      }
+
+      if (!relatedBand._id.equals(providedBand._id)) {
+        res.status(404).json({
+          error: `Band found with the provided key ${req.params.bandKey} and the album's related band are mismatching`,
+          relatedBand: relatedBand,
+          providedBand: providedBand,
+        })
+        return
+      }
+    }
+
+    await albumToDelete.remove((err, doc) => {
+      if (err) {
+        res.status(500).json({
+          error: 'Album deletion failed',
+        })
+        return
+      }
+
+      // removes the deleted album reference from the band
+      relatedBand.albums.pull(doc._id)
+      relatedBand.save()
+
+      // populate the related band (translate the band's object id to the actual document)
+      doc.populate('band', (err, doc) => {
+        res.status(200).json({
+          success: `Album deleted properly`,
+          deleted: doc,
+        })
       })
     })
   },

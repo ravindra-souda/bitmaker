@@ -3,7 +3,7 @@
 const mongoose = require('mongoose')
 const connect = require('./connect')
 
-module.exports = async (req, res, model, mandatoryName) => {
+module.exports = async (req, res, model, mandatoryKey) => {
   let messages = []
   if (!req.body._id && !req.body.code) {
     messages.push('Submitted JSON must contain an _id or a code key')
@@ -31,8 +31,8 @@ module.exports = async (req, res, model, mandatoryName) => {
     messages.push(`Provided _id is invalid: ${req.params.key}`)
   }
 
-  if (mandatoryName && !req.body.name) {
-    messages.push('Submitted JSON must contain a name key')
+  if (mandatoryKey && !req.body[mandatoryKey]) {
+    messages.push(`Submitted JSON must contain a ${mandatoryKey} key`)
   }
 
   if (messages.length > 0) {
@@ -53,15 +53,17 @@ module.exports = async (req, res, model, mandatoryName) => {
   const checkedModel = await model.findOne(checkFilter).exec()
   if (!checkedModel) {
     res.status(404).json({
-      error: `No band recorded with the provided ${keyName}: ${req.params.key}`,
+      error: `No ${model.modelName.toLowerCase()} recorded with the provided ${keyName}: ${
+        req.params.key
+      }`,
     })
     return null
   }
 
-  if (mandatoryName && checkedModel.name !== req.body.name) {
+  if (mandatoryKey && checkedModel[mandatoryKey] !== req.body[mandatoryKey]) {
     res.status(400).json({
-      error: `Band recorded with the provided ${keyName} has not been recorded with this name`,
-      band: checkedModel,
+      error: `${model.modelName} recorded with the provided ${keyName} has not been recorded with this ${mandatoryKey}`,
+      [model.modelName.toLowerCase()]: checkedModel,
     })
     return null
   }
