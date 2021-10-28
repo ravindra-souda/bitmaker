@@ -10,12 +10,60 @@ const checkRelatedModel = require('./helpers/checkRelatedModel')
 const fillModel = require('./helpers/fillModel')
 
 module.exports = {
+  get: async (req, res) => {
+    if (!(await connect(res))) {
+      return
+    }
+    const { filters, options } = await buildFilters(req, res, Album, {
+      relatedModel: Band,
+      relatedModelKey: req.params.bandKey,
+    })
+
+    if (!filters || !options) {
+      return
+    }
+
+    // convert releaseYear filter to releaseDate
+    if (filters.releaseYear) {
+      let minReleaseYear = new Date(Date.UTC(1900))
+      let releaseYear = new Date(Date.UTC(filters.releaseYear))
+      if (isNaN(releaseYear.getTime()) || minReleaseYear > releaseYear) {
+        res.status(400).json({
+          error: 'releaseYear must be an integer greater than 1900',
+        })
+        return
+      }
+      filters.releaseDate = {
+        $gte: releaseYear,
+        $lt: new Date(Date.UTC(releaseYear.getFullYear() + 1)),
+      }
+      delete filters.releaseYear
+    }
+
+    Album.find(filters, null, options, (err, docs) => {
+      if (err) {
+        res.status(500).json({
+          error: 'Internal mongoDB error',
+        })
+        return
+      }
+      if (docs.length === 0) {
+        res.status(404).json({
+          error: 'No album found with the given filters',
+          filters: filters,
+        })
+        return
+      }
+      res.status(200).json(docs)
+    })
+  },
+
   post: async (req, res) => {
     if (!(await connect(res))) {
       return
     }
 
-    const { filters, options } = buildFilters(req, res, Band)
+    const { filters, options } = await buildFilters(req, res, Band)
 
     if (!filters || !options) {
       return

@@ -3,6 +3,7 @@
 const mongoose = require('mongoose')
 const slugify = require('../helpers/slugify')
 
+const typeEnums = ['Compilation', 'EP', 'Live', 'Single', 'Studio']
 const albumSchema = new mongoose.Schema(
   {
     title: {
@@ -26,7 +27,7 @@ const albumSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ['Compilation', 'EP', 'Live', 'Single', 'Studio'],
+      enum: typeEnums,
     },
     tags: {
       type: [String],
@@ -49,6 +50,15 @@ const albumSchema = new mongoose.Schema(
 
 albumSchema.statics.getFields = function () {
   return ['title', 'releaseDate', 'type', 'tags']
+}
+albumSchema.statics.getFilters = function () {
+  return ['title', 'releaseDate', 'releaseYear', 'type', 'tags']
+}
+albumSchema.statics.getEnumFilters = function () {
+  return { type: typeEnums }
+}
+albumSchema.statics.getSortables = function () {
+  return ['title', 'releaseDate']
 }
 
 albumSchema.pre('save', async function (next) {

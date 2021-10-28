@@ -21,6 +21,18 @@ router.delete('/bands/:key', (req, res) => {
   bandController.delete(req, res)
 })
 
+router.get('/albums/:key', (req, res) => {
+  albumController.get(req, res)
+})
+router.get('/albums', (req, res) => {
+  albumController.get(req, res)
+})
+router.get('/bands/:bandKey/albums/:key', (req, res) => {
+  albumController.get(req, res)
+})
+router.get('/bands/:bandKey/albums', (req, res) => {
+  albumController.get(req, res)
+})
 router.post('/bands/:key/albums', (req, res) => {
   albumController.post(req, res)
 })

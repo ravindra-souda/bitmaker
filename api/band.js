@@ -12,7 +12,7 @@ module.exports = {
     if (!(await connect(res))) {
       return
     }
-    const { filters, options } = buildFilters(req, res, Band)
+    const { filters, options } = await buildFilters(req, res, Band)
 
     if (!filters || !options) {
       return

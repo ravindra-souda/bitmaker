@@ -265,6 +265,503 @@ describe('POST /albums', () => {
   })
 })
 
+const getPayloads = {
+  validBandFetchedById: {
+    name: 'Calvin Harris',
+    formationYear: 2002,
+    bio: `Calvin Harris sort en 2007 son premier album I Created Disco, qui deviendra disque d'or au Royaume-Uni`,
+    tags: ['house'],
+  },
+  validAlbumsForBandFetchedById: new Map([
+    [
+      3,
+      {
+        title: 'I Created Disco',
+        releaseDate: new Date('2007-06-15').toJSON(),
+        type: 'Studio',
+        tags: ['electro', 'edm'],
+      },
+    ],
+    [
+      1,
+      {
+        title: '18 Months',
+        releaseDate: new Date('2014-10-31').toJSON(),
+        type: 'Studio',
+        tags: ['electro', 'edm'],
+      },
+    ],
+    [
+      4,
+      {
+        title: 'Motion (Deluxe)',
+        releaseDate: new Date('2014-10-31').toJSON(),
+        type: 'Studio',
+        tags: ['edm'],
+      },
+    ],
+    [
+      6,
+      {
+        title: "We'll Be Coming Back",
+        type: 'EP',
+      },
+    ],
+    [
+      5,
+      {
+        title: 'Ready for the Weekend',
+        releaseDate: new Date('2009-08-14').toJSON(),
+        type: 'Studio',
+        tags: ['electro'],
+      },
+    ],
+    [
+      2,
+      {
+        title: 'Funk Wav Bounces Vol. 1',
+        releaseDate: new Date('2017-06-30').toJSON(),
+        type: 'Studio',
+        tags: ['funk', 'disco', 'electro', 'house', 'edm'],
+      },
+    ],
+  ]),
+  validBandFetchedByCode: {
+    name: 'Avicii',
+    formationYear: 2011,
+    bio: `Avicii, considéré comme l'un des plus grands DJ de sa génération, sort son premier album True en septembre 2013 qui établit sa réputation dans le monde de la house et de la dance.`,
+    tags: ['electro', 'house'],
+  },
+  validAlbumsForBandFetchedByCode: new Map([
+    [
+      5,
+      {
+        title: 'True (Avicii by Avicii)',
+        releaseDate: new Date('2014-03-24').toJSON(),
+        type: 'Studio',
+        tags: ['electro'],
+      },
+    ],
+    [
+      4,
+      {
+        title: 'True',
+        releaseDate: new Date('2013-09-13').toJSON(),
+        type: 'Studio',
+        tags: ['house', 'country'],
+      },
+    ],
+    [
+      2,
+      {
+        title: 'Stories (Deluxe)',
+        releaseDate: new Date('2013-09-13').toJSON(),
+        type: 'Studio',
+        tags: ['house'],
+      },
+    ],
+    [
+      3,
+      {
+        title: 'The Days / Nights EP',
+        releaseDate: new Date('2014-12-01').toJSON(),
+        type: 'EP',
+        tags: ['house'],
+      },
+    ],
+    [
+      1,
+      {
+        title: 'Avīci (01)',
+        releaseDate: new Date('2017-08-10').toJSON(),
+        type: 'EP',
+        tags: ['house'],
+      },
+    ],
+  ]),
+  validAlbumFetchedById: {},
+  validAlbumFetchedByCode: {},
+}
+
+getPayloads.validAlbumFetchedById = {
+  ...getPayloads.validAlbumsForBandFetchedById.get(2),
+}
+getPayloads.validAlbumFetchedByCode = {
+  ...getPayloads.validAlbumsForBandFetchedByCode.get(5),
+}
+
+describe('GET /albums', () => {
+  beforeAll(async () => {
+    let res = await request(app)
+      .post('/api/bands')
+      .send(getPayloads.validBandFetchedById)
+    postedBandId = res.body._id
+    bandIdsToClear.push(postedBandId)
+    for (let [key, album] of getPayloads.validAlbumsForBandFetchedById) {
+      let res = await request(app)
+        .post(`/api/bands/${postedBandId}/albums`)
+        .send(album)
+      if (key === 2) {
+        postedAlbumId = res.body._id
+      }
+    }
+    res = await request(app)
+      .post('/api/bands')
+      .send(getPayloads.validBandFetchedByCode)
+    postedBandCode = res.body.code
+    bandIdsToClear.push(res.body._id)
+    for (let [key, album] of getPayloads.validAlbumsForBandFetchedByCode) {
+      let res = await request(app)
+        .post(`/api/bands/${postedBandCode}/albums`)
+        .send(album)
+      if (key === 5) {
+        postedAlbumCode = res.body.code
+      }
+    }
+  })
+
+  test('search an existing album with id', async () => {
+    const res = await request(app).get('/api/albums/' + postedAlbumId)
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([getPayloads.validAlbumFetchedById])
+  })
+  test('search an existing album with code', async () => {
+    const res = await request(app).get('/api/albums/' + postedAlbumCode)
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([getPayloads.validAlbumFetchedByCode])
+  })
+  test('search an existing album and returned json should not show band-albums recursion', async () => {
+    const res = await request(app).get('/api/albums/' + postedAlbumCode)
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([getPayloads.validAlbumFetchedByCode])
+    expect(res.body[0].band).toMatchObject(getPayloads.validBandFetchedByCode)
+    expect(res.body[0].band).toHaveProperty('albums')
+    expect(res.body[0].band.albums).not.toHaveProperty('band')
+  })
+  test('search an existing album with id filtered by band', async () => {
+    const res = await request(app).get(
+      `/api/bands/${postedBandId}/albums/${postedAlbumId}`
+    )
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([getPayloads.validAlbumFetchedById])
+  })
+  test('search an existing album with code filtered by band', async () => {
+    const res = await request(app).get(
+      `/api/bands/${postedBandCode}/albums/${postedAlbumCode}`
+    )
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([getPayloads.validAlbumFetchedByCode])
+  })
+  test('search all existing albums for a given band (id)', async () => {
+    const res = await request(app).get(`/api/bands/${postedBandId}/albums`)
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([
+      getPayloads.validAlbumsForBandFetchedById.get(1),
+      getPayloads.validAlbumsForBandFetchedById.get(2),
+      getPayloads.validAlbumsForBandFetchedById.get(3),
+      getPayloads.validAlbumsForBandFetchedById.get(4),
+      getPayloads.validAlbumsForBandFetchedById.get(5),
+    ])
+  })
+  test('search all existing albums for a given band (code)', async () => {
+    const res = await request(app).get(`/api/bands/${postedBandCode}/albums`)
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([
+      getPayloads.validAlbumsForBandFetchedByCode.get(1),
+      getPayloads.validAlbumsForBandFetchedByCode.get(2),
+      getPayloads.validAlbumsForBandFetchedByCode.get(3),
+      getPayloads.validAlbumsForBandFetchedByCode.get(4),
+      getPayloads.validAlbumsForBandFetchedByCode.get(5),
+    ])
+  })
+  test('search an existing album with title', async () => {
+    let res = await request(app).get('/api/albums?title=delux')
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([
+      getPayloads.validAlbumsForBandFetchedById.get(4),
+      getPayloads.validAlbumsForBandFetchedByCode.get(2),
+    ])
+    res = await request(app).get('/api/albums?title=DELUX')
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([
+      getPayloads.validAlbumsForBandFetchedById.get(4),
+      getPayloads.validAlbumsForBandFetchedByCode.get(2),
+    ])
+  })
+  test('search an existing album with releaseDate', async () => {
+    const res = await request(app).get('/api/albums?releaseDate=2013-09-13')
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([
+      getPayloads.validAlbumsForBandFetchedByCode.get(2),
+      getPayloads.validAlbumsForBandFetchedByCode.get(4),
+    ])
+  })
+  test('search an existing album with releaseYear', async () => {
+    const res = await request(app).get('/api/albums?releaseYear=2014')
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([
+      getPayloads.validAlbumsForBandFetchedById.get(1),
+      getPayloads.validAlbumsForBandFetchedById.get(4),
+      getPayloads.validAlbumsForBandFetchedByCode.get(3),
+      getPayloads.validAlbumsForBandFetchedByCode.get(5),
+    ])
+  })
+  test('search an existing album with title for a given band (id)', async () => {
+    const res = await request(app).get(
+      `/api/bands/${postedBandId}/albums?title=wav`
+    )
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([getPayloads.validAlbumFetchedById])
+  })
+  test('search an existing album with title for a given band (code)', async () => {
+    const res = await request(app).get(
+      `/api/bands/${postedBandCode}/albums?title=e`
+    )
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([
+      getPayloads.validAlbumsForBandFetchedByCode.get(2),
+      getPayloads.validAlbumsForBandFetchedByCode.get(3),
+      getPayloads.validAlbumsForBandFetchedByCode.get(4),
+      getPayloads.validAlbumsForBandFetchedByCode.get(5),
+    ])
+  })
+  test('search existing albums with same tag', async () => {
+    const res = await request(app).get(
+      '/api/albums?tags=' +
+        getPayloads.validAlbumsForBandFetchedByCode.get(5).tags
+    )
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([
+      getPayloads.validAlbumsForBandFetchedById.get(1),
+      getPayloads.validAlbumsForBandFetchedById.get(2),
+      getPayloads.validAlbumsForBandFetchedById.get(3),
+      getPayloads.validAlbumsForBandFetchedById.get(5),
+      getPayloads.validAlbumsForBandFetchedByCode.get(5),
+    ])
+  })
+  test('search existing albums with same type', async () => {
+    const res = await request(app).get(
+      '/api/albums?type=' +
+        getPayloads.validAlbumsForBandFetchedById.get(6).type
+    )
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([
+      getPayloads.validAlbumsForBandFetchedByCode.get(1),
+      getPayloads.validAlbumsForBandFetchedByCode.get(3),
+      getPayloads.validAlbumsForBandFetchedById.get(6),
+    ])
+  })
+  test('search existing albums among several tags', async () => {
+    const res = await request(app).get(`/api/albums?tags=country,funk`)
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([
+      getPayloads.validAlbumsForBandFetchedById.get(2),
+      getPayloads.validAlbumsForBandFetchedByCode.get(4),
+    ])
+  })
+  test('search an existing album with tag for a given band (id)', async () => {
+    const res = await request(app).get(
+      `/api/bands/${postedBandId}/albums?tags=funk`
+    )
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([getPayloads.validAlbumFetchedById])
+  })
+  test('search an existing album with tag for a given band (code)', async () => {
+    const res = await request(app).get(
+      `/api/bands/${postedBandCode}/albums?tags=${
+        getPayloads.validAlbumsForBandFetchedByCode.get(5).tags
+      }`
+    )
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([
+      getPayloads.validAlbumsForBandFetchedByCode.get(5),
+    ])
+  })
+  test('search an existing album with type for a given band (id)', async () => {
+    const res = await request(app).get(
+      `/api/bands/${postedBandId}/albums?type=EP`
+    )
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([
+      getPayloads.validAlbumsForBandFetchedById.get(6),
+    ])
+  })
+  test('search an existing album with type for a given band (code)', async () => {
+    const res = await request(app).get(
+      `/api/bands/${postedBandCode}/albums?type=EP`
+    )
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([
+      getPayloads.validAlbumsForBandFetchedByCode.get(1),
+      getPayloads.validAlbumsForBandFetchedByCode.get(3),
+    ])
+  })
+  test('use parameter limit to get 3 albums out of 5', async () => {
+    const res = await request(app).get('/api/albums?tags=house&limit=3')
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([
+      getPayloads.validAlbumsForBandFetchedByCode.get(1),
+      getPayloads.validAlbumFetchedById,
+      getPayloads.validAlbumsForBandFetchedByCode.get(2),
+    ])
+  })
+  test('use parameter skip to get the last 2 albums', async () => {
+    const res = await request(app).get('/api/albums?tags=house&skip=3')
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([
+      getPayloads.validAlbumsForBandFetchedByCode.get(3),
+      getPayloads.validAlbumsForBandFetchedByCode.get(4),
+    ])
+  })
+  test('sort results based on releaseDate, then on reverse order title', async () => {
+    const res = await request(app).get(
+      '/api/albums?tags=house&sort=releaseDate,-title'
+    )
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([
+      getPayloads.validAlbumsForBandFetchedByCode.get(4),
+      getPayloads.validAlbumsForBandFetchedByCode.get(2),
+      getPayloads.validAlbumsForBandFetchedByCode.get(3),
+      getPayloads.validAlbumFetchedById,
+      getPayloads.validAlbumsForBandFetchedByCode.get(1),
+    ])
+  })
+  test('combine limit, skip and sort parameters', async () => {
+    const res = await request(app).get(
+      '/api/albums?tags=house&limit=3&skip=1&sort=-releaseDate,-title'
+    )
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([
+      getPayloads.validAlbumFetchedById,
+      getPayloads.validAlbumsForBandFetchedByCode.get(3),
+      getPayloads.validAlbumsForBandFetchedByCode.get(4),
+    ])
+  })
+  test('combine limit, skip and sort parameters filtered by band (id)', async () => {
+    const res = await request(app).get(
+      `/api/bands/${postedBandId}/albums?tags=edm&limit=3&skip=1&sort=releaseDate,-title`
+    )
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([
+      getPayloads.validAlbumsForBandFetchedById.get(4),
+      getPayloads.validAlbumsForBandFetchedById.get(1),
+      getPayloads.validAlbumsForBandFetchedById.get(2),
+    ])
+  })
+  test('combine limit, skip and sort parameters filtered by band (code)', async () => {
+    const res = await request(app).get(
+      `/api/bands/${postedBandCode}/albums?tags=house&limit=2&skip=2&sort=-releaseDate,-title`
+    )
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([
+      getPayloads.validAlbumsForBandFetchedByCode.get(4),
+      getPayloads.validAlbumsForBandFetchedByCode.get(2),
+    ])
+  })
+  test('throw error 400 on invalid releaseYear', async () => {
+    const res = await request(app).get('/api/albums?releaseYear=dummy')
+    expect(res.statusCode).toEqual(400)
+  })
+  test.each([
+    'dummy',
+    null,
+    '1953/12/25',
+    '2021-02-29',
+    '2021-12-32',
+    new Date('2021-12-32'),
+  ])('throw error 400 on invalid releaseDate', async (date) => {
+    const res = await request(app).get('/api/albums?releaseDate=' + date)
+    expect(res.statusCode).toEqual(400)
+    expect(res.body).toHaveProperty('invalidDateFilters')
+  })
+  test('throw error 400 on invalid type', async () => {
+    const res = await request(app).get('/api/albums?type=dummy')
+    expect(res.statusCode).toEqual(400)
+    expect(res.body).toHaveProperty('invalidEnumFilters', [
+      {
+        field: 'type',
+        providedEnumValue: 'dummy',
+        expectedEnumValues: Album.getEnumFilters()['type'],
+      },
+    ])
+  })
+  test('throw error 400 on invalid filters', async () => {
+    const res = await request(app).get('/api/albums?dummy=value')
+    expect(res.statusCode).toEqual(400)
+    expect(res.body).toHaveProperty('invalidFilters', ['dummy'])
+  })
+  test('throw error 400 on invalid limit and skip parameters', async () => {
+    let res = await request(app).get('/api/albums?tags=house&limit=-1')
+    expect(res.statusCode).toEqual(400)
+    res = await request(app).get('/api/albums?tags=house&skip=1.5')
+    expect(res.statusCode).toEqual(400)
+    res = await request(app).get('/api/albums?tags=house&limit=a&skip=b')
+    expect(res.statusCode).toEqual(400)
+  })
+  test('throw error 400 on limit parameter too high', async () => {
+    const res = await request(app).get(
+      '/api/albums?tags=house&limit=' +
+        (parseInt(process.env.MONGODB_LIMIT_RESULTS) + 1)
+    )
+    expect(res.statusCode).toEqual(400)
+  })
+  test('throw error 400 on invalid sort parameters', async () => {
+    const res = await request(app).get('/api/albums?tags=house&sort=dummy')
+    expect(res.statusCode).toEqual(400)
+    expect(res.body).toHaveProperty('invalidSortables', ['dummy'])
+  })
+  test('throw error 404 on album not found', async () => {
+    let res = await request(app).get(
+      '/api/albums/' + postedAlbumId.slice(1) + postedAlbumId.charAt(0)
+    )
+    expect(res.statusCode).toEqual(404)
+    expect(res.body).toHaveProperty('error')
+    res = await request(app).get('/api/albums/dummy')
+    expect(res.statusCode).toEqual(404)
+    expect(res.body).toHaveProperty('error')
+    res = await request(app).get('/api/albums?title=dummy')
+    expect(res.statusCode).toEqual(404)
+    expect(res.body).toHaveProperty('error')
+  })
+  test('throw error 404 on mismatching related band (id)', async () => {
+    const res = await request(app).get(
+      `/api/bands/${postedBandId}/albums/${postedAlbumCode}`
+    )
+    expect(res.statusCode).toEqual(404)
+    expect(res.body).toHaveProperty('error')
+  })
+  test('throw error 404 on mismatching related band (code)', async () => {
+    const res = await request(app).get(
+      `/api/bands/${postedBandCode}/albums/${postedAlbumId}`
+    )
+    expect(res.statusCode).toEqual(404)
+    expect(res.body).toHaveProperty('error')
+  })
+  test('throw error 404 on unknown related band (id)', async () => {
+    const res = await request(app).get(
+      `/api/bands/${
+        postedBandId.slice(1) + postedBandId.charAt(0)
+      }/albums/${postedAlbumId}`
+    )
+    expect(res.statusCode).toEqual(404)
+    expect(res.body).toHaveProperty('error')
+  })
+  test('throw error 404 on unknown related band (code)', async () => {
+    const res = await request(app).get(
+      `/api/bands/${postedBandCode.slice(1)}/albums/${postedAlbumCode}`
+    )
+    expect(res.statusCode).toEqual(404)
+    expect(res.body).toHaveProperty('error')
+  })
+
+  afterAll(async () => {
+    await Band.deleteMany({ $or: [{ _id: bandIdsToClear }] }, (err) => {
+      if (err) console.log(err)
+    })
+    bandIdsToClear = []
+  })
+})
+
 const patchPayloads = {
   validBandWithCode: {
     name: 'The Prodigy',
