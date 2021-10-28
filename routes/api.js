@@ -24,6 +24,12 @@ router.delete('/bands/:key', (req, res) => {
 router.post('/bands/:key/albums', (req, res) => {
   albumController.post(req, res)
 })
+router.patch('/albums/:key', (req, res) => {
+  albumController.patch(req, res)
+})
+router.patch('/bands/:bandKey/albums/:key', (req, res) => {
+  albumController.patch(req, res)
+})
 router.delete('/albums/:key', (req, res) => {
   albumController.delete(req, res)
 })

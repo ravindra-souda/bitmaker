@@ -265,6 +265,391 @@ describe('POST /albums', () => {
   })
 })
 
+const patchPayloads = {
+  validBandWithCode: {
+    name: 'The Prodigy',
+    formationYear: 1990,
+    bio:
+      'The Prodigy apparait sur la scène rave underground au début des années 1990, et atteint depuis lors une immense popularité et une renommée mondiale.',
+    tags: ['breakbeat', 'rave'],
+  },
+  validBandWithId: {
+    name: 'Fatboy Slim',
+    bio: 'Brighton Port Authority',
+  },
+  validUnrelatedBand: {
+    name: 'The Dust Brothers',
+  },
+  validCompleteAlbumWithCode: {
+    code: null,
+    title: 'The Fat of the Land',
+    releaseDate: new Date('1997-06-30').toJSON(),
+    type: 'Studio',
+    tags: ['big beat'],
+  },
+  validCompleteAlbumWithId: {
+    _id: null,
+    title: "You've Come a Long Way, Baby",
+    releaseDate: new Date('1998-10-19').toJSON(),
+    type: 'Studio',
+    tags: ['big beat'],
+  },
+  validAlbumToUpdateWithCode: {
+    title: '     The Added Fat     ',
+    releaseDate: new Date('2012-12-03').toJSON(),
+    type: ' EP  ',
+    tags: ['big beat', '  remixes '],
+  },
+  expectedCompleteAlbumUpdate: {
+    title: 'The Added Fat',
+    releaseDate: new Date('2012-12-03').toJSON(),
+    type: 'EP',
+    tags: ['big-beat', 'remixes'],
+  },
+  validMinimalUpdateWithId: {
+    _id: null,
+    title: "You've Come a Very Long Way, Baby",
+  },
+  validMinimalUpdateWithCode: {
+    code: null,
+    title: 'The Slim of the Land',
+  },
+  expectedMinimalUpdate: {
+    name: 'Gorillaz',
+    formationYear: 1998,
+    bio: 'Damon Albarn & Jamie Hewlett',
+    tags: ['electro'],
+  },
+  validDuplicateTagsUpdate: {
+    code: null,
+    tags: ['big beat', 'BIG BEAT', ' big beat   '],
+  },
+  expectedDedupTagsUpdate: {
+    tags: ['big-beat'],
+  },
+  invalidMissingId: {
+    _id: undefined,
+    title: "You've Come a Very Long Way, Baby",
+  },
+  invalidMissingCode: {
+    code: undefined,
+    title: 'The Slim of the Land',
+  },
+  invalidBothIdAndCode: {
+    _id: null,
+    code: null,
+    title: "You've Come a Very Long Way, Baby",
+  },
+  invalidMismatchingId: {
+    _id: 'dummy',
+    title: "You've Come a Very Long Way, Baby",
+  },
+  invalidMismatchingCode: {
+    code: 'dummy',
+    title: 'The Slim of the Land',
+  },
+  invalidEmptyTitle: {
+    _id: null,
+    title: '',
+  },
+  invalidReleaseDate: {
+    _id: null,
+    releaseDate: new Date('2007-25-42'),
+  },
+  invalidMinReleaseDate: {
+    _id: null,
+    releaseDate: new Date('1899-12-31'),
+  },
+  invalidType: {
+    _id: null,
+    type: ['33 1/3 rpm'],
+  },
+  invalidUnknownField: {
+    _id: null,
+    title: "You've Come a Very Long Way, Baby",
+    dummy: false,
+  },
+  invalidBadId: {
+    _id: null,
+    title: "You've Come a Very Long Way, Baby",
+  },
+  invalidUnknownId: {
+    _id: null,
+    title: "You've Come a Very Long Way, Baby",
+  },
+  invalidUnknownCode: {
+    code: null,
+    title: 'The Slim of the Land',
+  },
+  expectedMinimalUpdateWithId: {},
+  expectedMinimalUpdateWithCode: {},
+}
+
+patchPayloads.expectedMinimalUpdateWithId = {
+  ...patchPayloads.validCompleteAlbumWithId,
+  title: patchPayloads.validMinimalUpdateWithId.title,
+  tags: ['big-beat'],
+}
+patchPayloads.expectedMinimalUpdateWithCode = {
+  ...patchPayloads.validCompleteAlbumWithCode,
+  title: patchPayloads.validMinimalUpdateWithCode.title,
+  tags: ['big-beat'],
+}
+
+describe('PATCH /albums', () => {
+  beforeAll(async () => {
+    let res = await request(app)
+      .post('/api/bands')
+      .send(patchPayloads.validBandWithCode)
+    postedBandCode = res.body.code
+    bandIdsToClear.push(res.body._id)
+    res = await request(app)
+      .post('/api/bands')
+      .send(patchPayloads.validBandWithId)
+    postedBandId = res.body._id
+    bandIdsToClear.push(postedBandId)
+    res = await request(app)
+      .post('/api/bands')
+      .send(patchPayloads.validUnrelatedBand)
+    postedUnrelatedBandId = res.body._id
+    postedUnrelatedBandCode = res.body.code
+    bandIdsToClear.push(postedUnrelatedBandId)
+  })
+
+  beforeEach(async () => {
+    await Album.deleteMany({ code: postedAlbumCode }, (err) => {
+      if (err) console.log(err)
+    })
+    let res = await request(app)
+      .post(`/api/bands/${postedBandId}/albums`)
+      .send(patchPayloads.validCompleteAlbumWithId)
+    postedAlbumId = res.body._id
+    res = await request(app)
+      .post(`/api/bands/${postedBandCode}/albums`)
+      .send(patchPayloads.validCompleteAlbumWithCode)
+    postedAlbumCode = res.body.code
+  })
+
+  test('update an album', async () => {
+    patchPayloads.validAlbumToUpdateWithCode.code = postedAlbumCode
+    const res = await request(app)
+      .patch('/api/albums/' + postedAlbumCode)
+      .send(patchPayloads.validAlbumToUpdateWithCode)
+    expect(res.statusCode).toEqual(200)
+    expect(res.body.updatedAlbum).toMatchObject(
+      patchPayloads.expectedCompleteAlbumUpdate
+    )
+    expect(res.body.updatedAlbum.band).toMatchObject(
+      patchPayloads.validBandWithCode
+    )
+  })
+  test('update an album with id and minimal information', async () => {
+    patchPayloads.validMinimalUpdateWithId._id = postedAlbumId
+    patchPayloads.expectedMinimalUpdateWithId._id = postedAlbumId
+    const res = await request(app)
+      .patch('/api/albums/' + postedAlbumId)
+      .send(patchPayloads.validMinimalUpdateWithId)
+    expect(res.statusCode).toEqual(200)
+    expect(res.body.updatedAlbum).toMatchObject(
+      patchPayloads.expectedMinimalUpdateWithId
+    )
+  })
+  test('update an album with code and minimal information', async () => {
+    patchPayloads.validMinimalUpdateWithCode.code = postedAlbumCode
+    patchPayloads.expectedMinimalUpdateWithCode.code = postedAlbumCode
+    const res = await request(app)
+      .patch('/api/albums/' + postedAlbumCode)
+      .send(patchPayloads.validMinimalUpdateWithCode)
+    expect(res.statusCode).toEqual(200)
+    expect(res.body.updatedAlbum).toMatchObject(
+      patchPayloads.expectedMinimalUpdateWithCode
+    )
+  })
+  test('update an album and returned json should not show band-albums recursion', async () => {
+    patchPayloads.validMinimalUpdateWithCode.code = postedAlbumCode
+    patchPayloads.expectedMinimalUpdateWithCode.code = postedAlbumCode
+    const res = await request(app)
+      .patch('/api/albums/' + postedAlbumCode)
+      .send(patchPayloads.validMinimalUpdateWithCode)
+    expect(res.statusCode).toEqual(200)
+    expect(res.body.updatedAlbum).toMatchObject(
+      patchPayloads.expectedMinimalUpdateWithCode
+    )
+    expect(res.body.updatedAlbum.band).toMatchObject(
+      patchPayloads.validBandWithCode
+    )
+    expect(res.body.updatedAlbum.band).toHaveProperty('albums')
+    expect(res.body.updatedAlbum.band.albums).not.toHaveProperty('band')
+    expect(res.body.originalAlbum.band).toMatchObject(
+      patchPayloads.validBandWithCode
+    )
+    expect(res.body.originalAlbum.band).toHaveProperty('albums')
+    expect(res.body.originalAlbum.band.albums).not.toHaveProperty('band')
+  })
+  test('update an album with id and minimal information filtered by band', async () => {
+    patchPayloads.validMinimalUpdateWithId._id = postedAlbumId
+    patchPayloads.expectedMinimalUpdateWithId._id = postedAlbumId
+    const res = await request(app)
+      .patch(`/api/bands/${postedBandId}/albums/${postedAlbumId}`)
+      .send(patchPayloads.validMinimalUpdateWithId)
+    expect(res.statusCode).toEqual(200)
+    expect(res.body.updatedAlbum).toMatchObject(
+      patchPayloads.expectedMinimalUpdateWithId
+    )
+  })
+  test('update an album with code and minimal information filtered by band', async () => {
+    patchPayloads.validMinimalUpdateWithCode.code = postedAlbumCode
+    patchPayloads.expectedMinimalUpdateWithCode.code = postedAlbumCode
+    const res = await request(app)
+      .patch(`/api/bands/${postedBandCode}/albums/${postedAlbumCode}`)
+      .send(patchPayloads.validMinimalUpdateWithCode)
+    expect(res.statusCode).toEqual(200)
+    expect(res.body.updatedAlbum).toMatchObject(
+      patchPayloads.expectedMinimalUpdateWithCode
+    )
+  })
+  test('dedup tags on album update', async () => {
+    patchPayloads.validDuplicateTagsUpdate.code = postedAlbumCode
+    const res = await request(app)
+      .patch('/api/albums/' + postedAlbumCode)
+      .send(patchPayloads.validDuplicateTagsUpdate)
+    expect(res.statusCode).toEqual(200)
+    expect(res.body.updatedAlbum).toMatchObject(
+      patchPayloads.expectedDedupTagsUpdate
+    )
+  })
+  test('throw error 400 on missing id', async () => {
+    const res = await request(app)
+      .patch('/api/albums/' + postedAlbumId)
+      .send(patchPayloads.invalidMissingId)
+    expect(res.statusCode).toEqual(400)
+  })
+  test('throw error 400 on missing code', async () => {
+    const res = await request(app)
+      .patch('/api/albums/' + postedAlbumCode)
+      .send(patchPayloads.invalidMissingCode)
+    expect(res.statusCode).toEqual(400)
+  })
+  test('throw error 400 when JSON contains both id and code', async () => {
+    patchPayloads.invalidBothIdAndCode._id = postedAlbumId
+    patchPayloads.invalidBothIdAndCode.code = postedAlbumCode
+    const res = await request(app)
+      .patch('/api/albums/' + postedAlbumId)
+      .send(patchPayloads.invalidBothIdAndCode)
+    expect(res.statusCode).toEqual(400)
+  })
+  test('throw error 400 on mismatching id', async () => {
+    const res = await request(app)
+      .patch('/api/albums/' + postedAlbumId)
+      .send(patchPayloads.invalidMismatchingId)
+    expect(res.statusCode).toEqual(400)
+  })
+  test('throw error 400 on mismatching code', async () => {
+    const res = await request(app)
+      .patch('/api/albums/' + postedAlbumCode)
+      .send(patchPayloads.invalidMismatchingCode)
+    expect(res.statusCode).toEqual(400)
+  })
+  test('throw error 400 on empty title', async () => {
+    patchPayloads.invalidEmptyTitle._id = postedAlbumId
+    const res = await request(app)
+      .patch('/api/albums/' + postedAlbumId)
+      .send(patchPayloads.invalidEmptyTitle)
+    expect(res.statusCode).toEqual(400)
+  })
+  test('throw error 400 on invalid releaseDate', async () => {
+    patchPayloads.invalidReleaseDate._id = postedAlbumId
+    const res = await request(app)
+      .patch('/api/albums/' + postedAlbumId)
+      .send(patchPayloads.invalidReleaseDate)
+    expect(res.statusCode).toEqual(400)
+  })
+  test('throw error 400 on releaseDate before 1900', async () => {
+    patchPayloads.invalidMinReleaseDate._id = postedAlbumId
+    const res = await request(app)
+      .patch('/api/albums/' + postedAlbumId)
+      .send(patchPayloads.invalidMinReleaseDate)
+    expect(res.statusCode).toEqual(400)
+  })
+  test('throw error 400 on invalid type', async () => {
+    patchPayloads.invalidType._id = postedAlbumId
+    const res = await request(app)
+      .patch('/api/albums/' + postedAlbumId)
+      .send(patchPayloads.invalidType)
+    expect(res.statusCode).toEqual(400)
+  })
+  test('throw error 400 on unknown posted fields', async () => {
+    patchPayloads.invalidUnknownField._id = postedAlbumId
+    const res = await request(app)
+      .patch('/api/albums/' + postedAlbumId)
+      .send(patchPayloads.invalidUnknownField)
+    expect(res.statusCode).toEqual(400)
+    expect(res.body.invalidFields).toEqual(['dummy'])
+  })
+  test('throw error 400 on invalid id', async () => {
+    patchPayloads.invalidBadId._id = postedAlbumId.slice(1)
+    const res = await request(app)
+      .patch('/api/albums/' + patchPayloads.invalidBadId._id)
+      .send(patchPayloads.invalidBadId)
+    expect(res.statusCode).toEqual(400)
+  })
+  test('throw error 404 on unknown id', async () => {
+    patchPayloads.invalidUnknownId._id =
+      postedAlbumId.slice(1) + postedAlbumId.charAt(0)
+    const res = await request(app)
+      .patch('/api/albums/' + patchPayloads.invalidUnknownId._id)
+      .send(patchPayloads.invalidUnknownId)
+    expect(res.statusCode).toEqual(404)
+  })
+  test('throw error 404 on unknown code', async () => {
+    patchPayloads.invalidUnknownCode.code =
+      postedAlbumCode.slice(1) + postedAlbumCode.charAt(0)
+    const res = await request(app)
+      .patch('/api/albums/' + patchPayloads.invalidUnknownCode.code)
+      .send(patchPayloads.invalidUnknownCode)
+    expect(res.statusCode).toEqual(404)
+  })
+  test('throw error 404 on mismatching related band (id)', async () => {
+    patchPayloads.validMinimalUpdateWithId._id = postedAlbumId
+    const res = await request(app)
+      .patch(`/api/bands/${postedUnrelatedBandId}/albums/${postedAlbumId}`)
+      .send(patchPayloads.validMinimalUpdateWithId)
+    expect(res.statusCode).toEqual(404)
+  })
+  test('throw error 404 on mismatching related band (code)', async () => {
+    patchPayloads.validMinimalUpdateWithCode.code = postedAlbumCode
+    const res = await request(app)
+      .patch(`/api/bands/${postedUnrelatedBandCode}/albums/${postedAlbumCode}`)
+      .send(patchPayloads.validMinimalUpdateWithCode)
+    expect(res.statusCode).toEqual(404)
+  })
+  test('throw error 404 on unknown related band (id)', async () => {
+    patchPayloads.validMinimalUpdateWithId._id = postedAlbumId
+    const res = await request(app)
+      .patch(
+        `/api/bands/${
+          postedBandId.slice(1) + postedBandId.charAt(0)
+        }/albums/${postedAlbumId}`
+      )
+      .send(patchPayloads.validMinimalUpdateWithId)
+    expect(res.statusCode).toEqual(404)
+  })
+  test('throw error 404 on unknown related band (code)', async () => {
+    patchPayloads.validMinimalUpdateWithCode.code = postedAlbumCode
+    const res = await request(app)
+      .patch(`/api/bands/${postedBandCode.slice(1)}/albums/${postedAlbumCode}`)
+      .send(patchPayloads.validMinimalUpdateWithCode)
+    expect(res.statusCode).toEqual(404)
+  })
+
+  afterAll(async () => {
+    await Band.deleteMany({ $or: [{ _id: bandIdsToClear }] }, (err) => {
+      if (err) console.log(err)
+    })
+    bandIdsToClear = []
+  })
+})
+
 const deletePayloads = {
   validCompleteBand: {
     name: 'The Verve',

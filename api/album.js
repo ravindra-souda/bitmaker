@@ -6,8 +6,8 @@ const jsonQuery = require('json-query')
 const buildFilters = require('./helpers/buildFilters')
 const connect = require('./helpers/connect')
 const checkModel = require('./helpers/checkModel')
+const checkRelatedModel = require('./helpers/checkRelatedModel')
 const fillModel = require('./helpers/fillModel')
-const mongoose = require('mongoose')
 
 module.exports = {
   post: async (req, res) => {
@@ -71,6 +71,53 @@ module.exports = {
     })
   },
 
+  patch: async (req, res) => {
+    let albumToUpdate = await checkModel(req, res, Album)
+
+    if (!albumToUpdate) {
+      return
+    }
+
+    // additionnal checks if a band is provided
+    const relatedBand = await checkRelatedModel(
+      req.params.bandKey,
+      res,
+      Band,
+      albumToUpdate.band
+    )
+
+    if (!relatedBand) {
+      return
+    }
+
+    const originalAlbum = JSON.parse(JSON.stringify(albumToUpdate))
+
+    // update the Album with the values from the submitted JSON
+    albumToUpdate = fillModel(req, res, Album, albumToUpdate)
+
+    if (!albumToUpdate) {
+      return
+    }
+
+    await albumToUpdate.save((err, updatedAlbum) => {
+      if (err) {
+        let errMessages = jsonQuery('errors[**].message', { data: err })
+        res.status(400).json({
+          error: 'Submitted album validation failed',
+          messages: errMessages.value,
+        })
+        return
+      }
+      // populate the related band (translate the band's object id to the actual document)
+      updatedAlbum.populate('band', (err, doc) => {
+        res.status(200).json({
+          updatedAlbum: doc,
+          originalAlbum: originalAlbum,
+        })
+      })
+    })
+  },
+
   delete: async (req, res) => {
     const albumToDelete = await checkModel(req, res, Album, 'title')
 
@@ -78,29 +125,16 @@ module.exports = {
       return
     }
 
-    const relatedBand = await Band.findById(albumToDelete.band)
-
     // additionnal checks if a band is provided
-    if (req.params.bandKey) {
-      let filter = mongoose.isValidObjectId(req.params.bandKey)
-        ? { _id: req.params.bandKey }
-        : { code: req.params.bandKey }
-      const providedBand = await Band.findOne(filter).exec()
-      if (!providedBand) {
-        res.status(404).json({
-          error: `No band recorded with the provided _id or code: ${req.params.bandKey}`,
-        })
-        return
-      }
+    const relatedBand = await checkRelatedModel(
+      req.params.bandKey,
+      res,
+      Band,
+      albumToDelete.band
+    )
 
-      if (!relatedBand._id.equals(providedBand._id)) {
-        res.status(404).json({
-          error: `Band found with the provided key ${req.params.bandKey} and the album's related band are mismatching`,
-          relatedBand: relatedBand,
-          providedBand: providedBand,
-        })
-        return
-      }
+    if (!relatedBand) {
+      return
     }
 
     await albumToDelete.remove((err, doc) => {
