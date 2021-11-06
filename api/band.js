@@ -109,6 +109,16 @@ module.exports = {
       return
     }
 
+    if (!req.body.cascadeDeleteAlbums && bandToDelete.albums.length) {
+      res.status(409).json({
+        error: 'Band linked to some albums',
+        message:
+          'To delete this band and all of its linked albums, you can set { "cascadeDeleteAlbums" : true } in your JSON',
+        linkedAlbums: bandToDelete.albums,
+      })
+      return
+    }
+
     await bandToDelete.remove((err, doc) => {
       if (err) {
         res.status(500).json({

@@ -2,6 +2,7 @@
 
 const mongoose = require('mongoose')
 const slugify = require('../helpers/slugify')
+const { Album } = require('./Album')
 const yearNow = new Date().getFullYear()
 
 const bandSchema = new mongoose.Schema(
@@ -63,6 +64,10 @@ bandSchema.statics.getSortables = function () {
 
 bandSchema.pre('save', function (next) {
   this.code = slugify(this.name)
+  next()
+})
+bandSchema.pre('remove', async function (next) {
+  await Album.deleteMany({ band: this._id })
   next()
 })
 

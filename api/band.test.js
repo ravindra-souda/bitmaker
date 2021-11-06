@@ -690,6 +690,11 @@ const deletePayloads = {
     code: null,
     name: 'The Chemical Brothers',
   },
+  validBandToForceDelete: {
+    _id: null,
+    name: 'The Chemical Brothers',
+    cascadeDeleteAlbums: true,
+  },
   invalidMissingId: {
     _id: undefined,
     name: 'The Chemical Brothers',
@@ -731,6 +736,12 @@ const deletePayloads = {
     code: null,
     name: 'The Chemical Brothers',
   },
+  linkedAlbum: {
+    title: 'Surrender',
+    releaseDate: new Date('1999-06-21').toJSON(),
+    type: 'Studio',
+    tags: ['electronica'],
+  },
 }
 
 describe('DELETE /bands', () => {
@@ -759,6 +770,19 @@ describe('DELETE /bands', () => {
       .delete('/api/bands/' + postedBandCode)
       .send(deletePayloads.validBandToDeleteWithCode)
     expect(res.statusCode).toEqual(200)
+  })
+  test('force delete a band linked to an album', async () => {
+    let res = await request(app)
+      .post(`/api/bands/${postedBandCode}/albums`)
+      .send(deletePayloads.linkedAlbum)
+    expect(res.statusCode).toEqual(201)
+    deletePayloads.validBandToForceDelete._id = postedBandId
+    res = await request(app)
+      .delete('/api/bands/' + postedBandId)
+      .send(deletePayloads.validBandToForceDelete)
+    expect(res.statusCode).toEqual(200)
+    res = await request(app).get(`/api/albums?title=surrender`)
+    expect(res.statusCode).toEqual(404)
   })
   test('throw error 400 on missing id', async () => {
     const res = await request(app)
@@ -828,6 +852,18 @@ describe('DELETE /bands', () => {
       .delete('/api/bands/' + deletePayloads.invalidUnknownCode.code)
       .send(deletePayloads.invalidUnknownCode)
     expect(res.statusCode).toEqual(404)
+  })
+  test('throw error 409 when deleting a band linked to an album', async () => {
+    let res = await request(app)
+      .post(`/api/bands/${postedBandCode}/albums`)
+      .send(deletePayloads.linkedAlbum)
+    expect(res.statusCode).toEqual(201)
+    deletePayloads.validBandToDeleteWithId._id = postedBandId
+    res = await request(app)
+      .delete('/api/bands/' + postedBandId)
+      .send(deletePayloads.validBandToDeleteWithId)
+    expect(res.statusCode).toEqual(409)
+    expect(res.body.linkedAlbums).toMatchObject([deletePayloads.linkedAlbum])
   })
 })
 
