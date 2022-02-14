@@ -6,6 +6,7 @@ dotenv.config({ path: '.env.test' })
 
 const { Album } = require('./api/models/Album')
 const Band = require('./api/models/Band')
+const Song = require('./api/models/Song')
 const connect = require('./api/helpers/connect')
 
 module.exports = async () => {
@@ -16,6 +17,9 @@ module.exports = async () => {
     if (err) console.log(err)
   })
   await Album.deleteMany({}, (err) => {
+    if (err) console.log(err)
+  })
+  await Song.deleteMany({}, (err) => {
     if (err) console.log(err)
   })
 }

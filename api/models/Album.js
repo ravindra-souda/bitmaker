@@ -33,6 +33,13 @@ const albumSchema = new mongoose.Schema(
       type: [String],
       set: (tags) => [...new Set(tags.map((tag) => slugify(tag)))],
     },
+    songs: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Song',
+        autopopulate: true,
+      },
+    ],
     band: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Band',

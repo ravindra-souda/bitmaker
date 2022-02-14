@@ -4,6 +4,7 @@ const express = require('express')
 const router = express.Router()
 const albumController = require('../api/album')
 const bandController = require('../api/band')
+const songController = require('../api/song')
 
 router.get('/bands/:key', (req, res) => {
   bandController.get(req, res)
@@ -47,6 +48,13 @@ router.delete('/albums/:key', (req, res) => {
 })
 router.delete('/bands/:bandKey/albums/:key', (req, res) => {
   albumController.delete(req, res)
+})
+
+router.post('/bands/:bandKey/albums/:key/songs', (req, res) => {
+  songController.post(req, res)
+})
+router.post('/albums/:key/songs', (req, res) => {
+  songController.post(req, res)
 })
 
 module.exports = router
