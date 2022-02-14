@@ -37,7 +37,20 @@ const albumSchema = new mongoose.Schema(
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Song',
-        autopopulate: true,
+        // avoid recursion (Album document containing a songs array showing again our Album)
+        autopopulate: {
+          select: [
+            'title',
+            'code',
+            'position',
+            'duration',
+            'singers',
+            'lyrics',
+            'ratingSum',
+            'voters',
+            'rating',
+          ],
+        },
       },
     ],
     band: {

@@ -5,11 +5,18 @@ const request = require('supertest')
 const app = require('../app')
 const { Album } = require('./models/Album')
 const Band = require('./models/Band')
+const Song = require('./models/Song')
 
 let postedBandId,
   postedBandCode,
+  postedUnrelatedBandId,
+  postedUnrelatedBandCode,
   postedAlbumId,
   postedAlbumCode,
+  postedUnrelatedAlbumId,
+  postedUnrelatedAlbumCode,
+  postedSongId,
+  postedSongCode,
   bandIdsToClear = [],
   albumIdsToClear = []
 const postPayloads = {
@@ -465,6 +472,368 @@ describe('POST /songs', () => {
       if (err) console.log(err)
     })
     albumIdsToClear = []
+  })
+})
+
+const deletePayloads = {
+  validCompleteBand: {
+    name: 'Etienne de Crécy',
+    formationYear: 1992,
+    bio:
+      'Avec Super Discount en 1996, Etienne de Crécy contribue grandement à populariser la French touch.',
+    tags: ['french-touch'],
+  },
+  validUnrelatedBand: {
+    name: 'Kavinsky',
+  },
+  validCompleteAlbum: {
+    title: 'Super Discount',
+    releaseDate: new Date('1996-10-16').toJSON(),
+    type: 'Studio',
+    tags: ['house'],
+  },
+  validUnrelatedAlbum: {
+    title: 'Super Discount 2',
+  },
+  validSongToDeleteWithId: {
+    _id: null,
+    title: 'Tout Doit Disparaître',
+    position: 6,
+  },
+  validSongToDeleteWithCode: {
+    code: null,
+    title: 'Tout Doit Disparaître',
+    position: 6,
+  },
+  validOtherSongs: new Map([
+    [
+      1,
+      {
+        title: 'Le patron est devenu fou',
+        position: 1,
+        duration: '10:07',
+      },
+    ],
+    [
+      2,
+      {
+        title: 'Prix choc',
+        position: 2,
+        duration: '08:52',
+      },
+    ],
+  ]),
+  invalidMissingId: {
+    _id: undefined,
+    title: 'Tout Doit Disparaître',
+  },
+  invalidMissingCode: {
+    code: undefined,
+    title: 'Liquidation Totale',
+  },
+  invalidMissingTitle: {
+    _id: null,
+    title: null,
+  },
+  invalidBothIdAndCode: {
+    id: null,
+    code: null,
+    title: 'Liquidation Totale',
+  },
+  invalidMismatchingId: {
+    _id: 'dummy',
+    title: 'Tout Doit Disparaître',
+  },
+  invalidMismatchingCode: {
+    code: 'dummy',
+    title: 'Liquidation Totale',
+  },
+  invalidMismatchingTitle: {
+    _id: null,
+    title: 'Destockage Massif',
+  },
+  invalidBadId: {
+    _id: null,
+    title: 'Tout Doit Disparaître',
+  },
+  invalidUnknownId: {
+    _id: null,
+    title: 'Tout Doit Disparaître',
+  },
+  invalidUnknownCode: {
+    code: null,
+    title: 'Liquidation Totale',
+  },
+}
+
+describe('DELETE /songs', () => {
+  beforeAll(async () => {
+    let res = await request(app)
+      .post('/api/bands')
+      .send(deletePayloads.validCompleteBand)
+    postedBandId = res.body._id
+    postedBandCode = res.body.code
+    bandIdsToClear.push(postedBandId)
+    res = await request(app)
+      .post('/api/bands')
+      .send(deletePayloads.validUnrelatedBand)
+    postedUnrelatedBandId = res.body._id
+    postedUnrelatedBandCode = res.body.code
+    bandIdsToClear.push(postedUnrelatedBandId)
+    res = await request(app)
+      .post(`/api/bands/${postedBandId}/albums`)
+      .send(deletePayloads.validCompleteAlbum)
+    postedAlbumId = res.body._id
+    postedAlbumCode = res.body.code
+    albumIdsToClear.push(postedAlbumId)
+    res = await request(app)
+      .post(`/api/bands/${postedBandId}/albums`)
+      .send(deletePayloads.validUnrelatedAlbum)
+    postedUnrelatedAlbumId = res.body._id
+    postedUnrelatedAlbumCode = res.body.code
+    albumIdsToClear.push(res.body._id)
+    res = await request(app)
+      .post(`/api/bands/${postedBandId}/albums/${postedAlbumId}/songs`)
+      .send(deletePayloads.validOtherSongs.get(1))
+    res = await request(app)
+      .post(`/api/bands/${postedBandId}/albums/${postedAlbumId}/songs`)
+      .send(deletePayloads.validOtherSongs.get(2))
+  })
+
+  beforeEach(async () => {
+    await Song.deleteMany({ code: postedSongCode }, (err) => {
+      if (err) console.log(err)
+    })
+    let res = await request(app)
+      .post(`/api/bands/${postedBandId}/albums/${postedAlbumId}/songs`)
+      .send(deletePayloads.validSongToDeleteWithId)
+    postedSongId = res.body._id
+    postedSongCode = res.body.code
+  })
+
+  test('delete a song with id', async () => {
+    deletePayloads.validSongToDeleteWithId._id = postedSongId
+    const res = await request(app)
+      .delete(`/api/songs/${postedSongId}`)
+      .send(deletePayloads.validSongToDeleteWithId)
+    expect(res.statusCode).toEqual(200)
+  })
+  test('delete a song with code', async () => {
+    deletePayloads.validSongToDeleteWithCode.code = postedSongCode
+    const res = await request(app)
+      .delete(`/api/songs/${postedSongCode}`)
+      .send(deletePayloads.validSongToDeleteWithCode)
+    expect(res.statusCode).toEqual(200)
+  })
+  test('delete a song and returned json should not show album-songs recursion', async () => {
+    deletePayloads.validSongToDeleteWithCode.code = postedSongCode
+    const res = await request(app)
+      .delete(`/api/songs/${postedSongCode}`)
+      .send(deletePayloads.validSongToDeleteWithCode)
+    expect(res.statusCode).toEqual(200)
+    expect(res.body.deleted.album).toMatchObject(
+      deletePayloads.validCompleteAlbum
+    )
+    expect(res.body.deleted.album.band).toMatchObject(
+      deletePayloads.validCompleteBand
+    )
+    expect(res.body.deleted.album).toHaveProperty('songs')
+    expect(res.body.deleted.album.songs).not.toHaveProperty('album')
+  })
+  test('delete a song with id filtered by album', async () => {
+    deletePayloads.validSongToDeleteWithId._id = postedSongId
+    const res = await request(app)
+      .delete(`/api/albums/${postedAlbumId}/songs/${postedSongId}`)
+      .send(deletePayloads.validSongToDeleteWithId)
+    expect(res.statusCode).toEqual(200)
+  })
+  test('delete a song with code filtered by album', async () => {
+    deletePayloads.validSongToDeleteWithCode.code = postedSongCode
+    const res = await request(app)
+      .delete(`/api/albums/${postedAlbumCode}/songs/${postedSongCode}`)
+      .send(deletePayloads.validSongToDeleteWithCode)
+    expect(res.statusCode).toEqual(200)
+  })
+  test('delete a song with id filtered by band and album', async () => {
+    deletePayloads.validSongToDeleteWithId._id = postedSongId
+    const res = await request(app)
+      .delete(
+        `/api/bands/${postedBandId}/albums/${postedAlbumId}/songs/${postedSongId}`
+      )
+      .send(deletePayloads.validSongToDeleteWithId)
+    expect(res.statusCode).toEqual(200)
+  })
+  test('delete a song with code filtered by band and album', async () => {
+    deletePayloads.validSongToDeleteWithCode.code = postedSongCode
+    const res = await request(app)
+      .delete(
+        `/api/bands/${postedBandCode}/albums/${postedAlbumCode}/songs/${postedSongCode}`
+      )
+      .send(deletePayloads.validSongToDeleteWithCode)
+    expect(res.statusCode).toEqual(200)
+  })
+  test('delete a song and show the remaining ones from the related album', async () => {
+    deletePayloads.validSongToDeleteWithCode.code = postedSongCode
+    const res = await request(app)
+      .delete(`/api/albums/${postedAlbumCode}/songs/${postedSongCode}`)
+      .send(deletePayloads.validSongToDeleteWithCode)
+    expect(res.statusCode).toEqual(200)
+    expect(res.body.deleted.album.songs).toMatchObject([
+      deletePayloads.validOtherSongs.get(1),
+      deletePayloads.validOtherSongs.get(2),
+    ])
+  })
+  test('throw error 400 on missing id', async () => {
+    const res = await request(app)
+      .delete(`/api/songs/${postedSongId}`)
+      .send(deletePayloads.invalidMissingId)
+    expect(res.statusCode).toEqual(400)
+  })
+  test('throw error 400 on missing code', async () => {
+    const res = await request(app)
+      .delete(`/api/songs/${postedSongCode}`)
+      .send(deletePayloads.invalidMissingCode)
+    expect(res.statusCode).toEqual(400)
+  })
+  test('throw error 400 when JSON contains both id and code', async () => {
+    deletePayloads.invalidBothIdAndCode._id = postedSongId
+    deletePayloads.invalidBothIdAndCode.code = postedSongCode
+    const res = await request(app)
+      .delete(`/api/songs/${postedSongCode}`)
+      .send(deletePayloads.invalidBothIdAndCode)
+    expect(res.statusCode).toEqual(400)
+  })
+  test('throw error 400 on missing title', async () => {
+    deletePayloads.invalidMissingTitle._id = postedSongId
+    const res = await request(app)
+      .delete(`/api/songs/${postedSongId}`)
+      .send(deletePayloads.invalidMissingTitle)
+    expect(res.statusCode).toEqual(400)
+  })
+  test('throw error 400 on mismatching id', async () => {
+    const res = await request(app)
+      .delete(`/api/songs/${postedSongId}`)
+      .send(deletePayloads.invalidMismatchingId)
+    expect(res.statusCode).toEqual(400)
+  })
+  test('throw error 400 on mismatching code', async () => {
+    const res = await request(app)
+      .delete(`/api/songs/${postedSongCode}`)
+      .send(deletePayloads.invalidMismatchingCode)
+    expect(res.statusCode).toEqual(400)
+  })
+  test('throw error 400 on mismatching title', async () => {
+    deletePayloads.invalidMismatchingTitle._id = postedSongId
+    const res = await request(app)
+      .delete(`/api/songs/${postedSongId}`)
+      .send(deletePayloads.invalidMismatchingTitle)
+    expect(res.statusCode).toEqual(400)
+  })
+  test('throw error 400 on invalid id', async () => {
+    deletePayloads.invalidBadId._id = postedSongId.slice(1)
+    const res = await request(app)
+      .delete('/api/songs/' + deletePayloads.invalidBadId._id)
+      .send(deletePayloads.invalidBadId)
+    expect(res.statusCode).toEqual(400)
+  })
+  test('throw error 404 on unknown id', async () => {
+    deletePayloads.invalidUnknownId._id =
+      postedSongId.slice(1) + postedSongId.charAt(0)
+    const res = await request(app)
+      .delete('/api/songs/' + deletePayloads.invalidUnknownId._id)
+      .send(deletePayloads.invalidUnknownId)
+    expect(res.statusCode).toEqual(404)
+  })
+  test('throw error 404 on unknown code', async () => {
+    deletePayloads.invalidUnknownCode.code =
+      postedSongCode.slice(1) + postedSongCode.charAt(0)
+    const res = await request(app)
+      .delete('/api/songs/' + deletePayloads.invalidUnknownCode.code)
+      .send(deletePayloads.invalidUnknownCode)
+    expect(res.statusCode).toEqual(404)
+  })
+  test('throw error 404 on mismatching related album (id)', async () => {
+    deletePayloads.validSongToDeleteWithId._id = postedSongId
+    const res = await request(app)
+      .delete(`/api/albums/${postedUnrelatedAlbumId}/songs/${postedSongId}`)
+      .send(deletePayloads.validSongToDeleteWithId)
+    expect(res.statusCode).toEqual(404)
+  })
+  test('throw error 404 on mismatching related album (code)', async () => {
+    deletePayloads.validSongToDeleteWithCode.code = postedSongCode
+    const res = await request(app)
+      .delete(`/api/albums/${postedUnrelatedAlbumCode}/songs/${postedSongCode}`)
+      .send(deletePayloads.validSongToDeleteWithCode)
+    expect(res.statusCode).toEqual(404)
+  })
+  test('throw error 404 on unknown related album (id)', async () => {
+    deletePayloads.validSongToDeleteWithId._id = postedSongId
+    const res = await request(app)
+      .delete(
+        `/api/albums/${
+          postedAlbumId.slice(1) + postedAlbumId.charAt(0)
+        }/songs/${postedSongId}`
+      )
+      .send(deletePayloads.validSongToDeleteWithId)
+    expect(res.statusCode).toEqual(404)
+  })
+  test('throw error 404 on unknown related album (code)', async () => {
+    deletePayloads.validSongToDeleteWithCode.code = postedSongCode
+    const res = await request(app)
+      .delete(`/api/albums/${postedAlbumCode.slice(1)}/songs/${postedSongCode}`)
+      .send(deletePayloads.validSongToDeleteWithCode)
+    expect(res.statusCode).toEqual(404)
+  })
+  test('throw error 404 on mismatching related band (id)', async () => {
+    deletePayloads.validSongToDeleteWithId._id = postedSongId
+    const res = await request(app)
+      .delete(
+        `/api/bands/${postedUnrelatedBandId}/albums/${postedAlbumId}/songs/${postedSongId}`
+      )
+      .send(deletePayloads.validSongToDeleteWithId)
+    expect(res.statusCode).toEqual(404)
+  })
+  test('throw error 404 on mismatching related band (code)', async () => {
+    deletePayloads.validSongToDeleteWithCode.code = postedSongCode
+    const res = await request(app)
+      .delete(
+        `/api/bands/${postedUnrelatedBandCode}/albums/${postedAlbumCode}/songs/${postedSongCode}`
+      )
+      .send(deletePayloads.validSongToDeleteWithCode)
+    expect(res.statusCode).toEqual(404)
+  })
+  test('throw error 404 on unknown related band (id)', async () => {
+    deletePayloads.validSongToDeleteWithId._id = postedSongId
+    const res = await request(app)
+      .delete(
+        `/api/bands/${
+          postedBandId.slice(1) + postedBandId.charAt(0)
+        }/albums/${postedAlbumId}/songs/${postedSongId}`
+      )
+      .send(deletePayloads.validSongToDeleteWithId)
+    expect(res.statusCode).toEqual(404)
+  })
+  test('throw error 404 on unknown related band (code)', async () => {
+    deletePayloads.validSongToDeleteWithCode.code = postedSongCode
+    const res = await request(app)
+      .delete(
+        `/api/bands/${postedBandCode.slice(
+          1
+        )}/albums/${postedAlbumCode}/songs/${postedSongCode}`
+      )
+      .send(deletePayloads.validSongToDeleteWithCode)
+    expect(res.statusCode).toEqual(404)
+  })
+
+  afterAll(async () => {
+    await Album.deleteMany({ $or: [{ _id: albumIdsToClear }] }, (err) => {
+      if (err) console.log(err)
+    })
+    albumIdsToClear = []
+    await Band.deleteMany({ $or: [{ _id: bandIdsToClear }] }, (err) => {
+      if (err) console.log(err)
+    })
+    bandIdsToClear = []
   })
 })
 

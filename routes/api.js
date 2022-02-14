@@ -56,5 +56,14 @@ router.post('/bands/:bandKey/albums/:key/songs', (req, res) => {
 router.post('/albums/:key/songs', (req, res) => {
   songController.post(req, res)
 })
+router.delete('/songs/:key', (req, res) => {
+  songController.delete(req, res)
+})
+router.delete('/albums/:albumKey/songs/:key', (req, res) => {
+  songController.delete(req, res)
+})
+router.delete('/bands/:bandKey/albums/:albumKey/songs/:key', (req, res) => {
+  songController.delete(req, res)
+})
 
 module.exports = router

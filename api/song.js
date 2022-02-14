@@ -1,9 +1,12 @@
 'use strict'
 
 const { Album } = require('./models/Album')
+const Band = require('./models/Band')
 const Song = require('./models/Song')
 const jsonQuery = require('json-query')
 const buildFilters = require('./helpers/buildFilters')
+const checkModel = require('./helpers/checkModel')
+const checkRelatedModel = require('./helpers/checkRelatedModel')
 const connect = require('./helpers/connect')
 const fillModel = require('./helpers/fillModel')
 
@@ -74,6 +77,60 @@ module.exports = {
       // populate the related album (translate the album's object id to the actual document)
       savedSong.populate('album', (err, doc) => {
         res.status(201).json(doc)
+      })
+    })
+  },
+
+  delete: async (req, res) => {
+    const songToDelete = await checkModel(req, res, Song, 'title')
+
+    if (!songToDelete) {
+      return
+    }
+
+    // additionnal checks if an album is provided
+    const relatedAlbum = await checkRelatedModel(
+      req.params.albumKey,
+      res,
+      Album,
+      songToDelete.album
+    )
+
+    if (!relatedAlbum) {
+      return
+    }
+
+    // more checks if a band is provided
+    if (
+      req.params.bandKey &&
+      !(await checkRelatedModel(
+        req.params.bandKey,
+        res,
+        Band,
+        songToDelete.album.band
+      ))
+    ) {
+      return
+    }
+
+    await songToDelete.remove((err, doc) => {
+      if (err) {
+        res.status(500).json({
+          error: 'Song deletion failed',
+        })
+        return
+      }
+
+      // removes the deleted song reference from the album
+      relatedAlbum.songs.pull(doc._id)
+      relatedAlbum.save()
+
+      // populate the related album (translate the album's object id to the actual document)
+      doc.populate('album', (err, doc) => {
+        res.status(200).json({
+          success: `Song deleted properly`,
+          deleted: doc,
+        })
       })
     })
   },
