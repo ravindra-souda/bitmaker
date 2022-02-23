@@ -56,6 +56,15 @@ router.post('/bands/:bandKey/albums/:key/songs', (req, res) => {
 router.post('/albums/:key/songs', (req, res) => {
   songController.post(req, res)
 })
+router.patch('/songs/:key', (req, res) => {
+  songController.patch(req, res)
+})
+router.patch('/albums/:albumKey/songs/:key', (req, res) => {
+  songController.patch(req, res)
+})
+router.patch('/bands/:bandKey/albums/:albumKey/songs/:key', (req, res) => {
+  songController.patch(req, res)
+})
 router.delete('/songs/:key', (req, res) => {
   songController.delete(req, res)
 })

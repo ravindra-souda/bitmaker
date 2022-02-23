@@ -97,7 +97,7 @@ songSchema.post('validate', async function () {
   const duplicateSongPosition = await mongoose
     .model('Song')
     .findOne({ position: this.position, album: this.album })
-  if (duplicateSongPosition) {
+  if (duplicateSongPosition && !duplicateSongPosition.equals(this)) {
     throw {
       error: 'Another song was previously recorded with the same position',
       duplicateSongPosition,

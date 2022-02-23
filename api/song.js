@@ -81,6 +81,76 @@ module.exports = {
     })
   },
 
+  patch: async (req, res) => {
+    let songToUpdate = await checkModel(req, res, Song)
+
+    if (!songToUpdate) {
+      return
+    }
+
+    // additionnal checks if an album is provided
+    const relatedAlbum = await checkRelatedModel(
+      req.params.albumKey,
+      res,
+      Album,
+      songToUpdate.album
+    )
+
+    if (!relatedAlbum) {
+      return
+    }
+
+    // more checks if a band is provided
+    if (
+      req.params.bandKey &&
+      !(await checkRelatedModel(
+        req.params.bandKey,
+        res,
+        Band,
+        songToUpdate.album.band
+      ))
+    ) {
+      return
+    }
+
+    const originalSong = JSON.parse(JSON.stringify(songToUpdate))
+
+    // update the Song with the values from the submitted JSON
+    songToUpdate = fillModel(req, res, Song, songToUpdate)
+
+    if (!songToUpdate) {
+      return
+    }
+
+    let updatedSong
+    try {
+      updatedSong = await songToUpdate.save()
+    } catch (err) {
+      if (err.duplicateSongPosition) {
+        res.status(400).json(err)
+        return
+      }
+      // errors for duration and position fields stored in the reason key
+      let errMessages = jsonQuery('errors[**].reason', { data: err }).value
+      if (typeof errMessages[0] !== 'string') {
+        errMessages = jsonQuery('errors[**].message', { data: err }).value
+      }
+      res.status(400).json({
+        error: 'Submitted song validation failed',
+        messages: errMessages,
+      })
+      return
+    }
+
+    // populate the related album (translate the album's object id to the actual document)
+    updatedSong.populate('album', (err, doc) => {
+      res.status(200).json({
+        updatedSong: doc,
+        originalSong,
+      })
+    })
+  },
+
   delete: async (req, res) => {
     const songToDelete = await checkModel(req, res, Song, 'title')
 
