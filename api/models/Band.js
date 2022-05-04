@@ -58,6 +58,9 @@ bandSchema.statics.getFilters = function () {
 bandSchema.statics.getEnumFilters = function () {
   return {}
 }
+bandSchema.statics.getRangeFilters = function () {
+  return []
+}
 bandSchema.statics.getSortables = function () {
   return ['name', 'formationYear']
 }

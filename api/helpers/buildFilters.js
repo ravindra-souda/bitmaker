@@ -32,10 +32,12 @@ module.exports = async (req, res, model, relatedModelOptions = {}) => {
   } = req.query
 
   // invalid values for number fields
+  const numericRegex = /^-?\d+(?:\.\d+)?$/
   const invalidNumericFilters = Object.entries(filters).filter(
     ([field, value]) =>
       model.schema.path(field) instanceof SchemaNumber &&
-      !/^-?\d+(?:\.\d+)?$/.test(value)
+      !model.getRangeFilters().includes(field) &&
+      !numericRegex.test(value)
   )
   if (invalidNumericFilters.length) {
     res.status(400).json({
@@ -82,6 +84,33 @@ module.exports = async (req, res, model, relatedModelOptions = {}) => {
     return { filters: null }
   }
 
+  // invalid values for range fields
+  const rangeRegex = /^(\d+(?:\.{1}\d+)?)-(\d+(?:\.{1}\d+)?)$/
+  const isInvalidRangeFilter = ([field, value]) => {
+    if (!model.getRangeFilters().includes(field)) {
+      return false
+    }
+    // passthrough for single values
+    if (numericRegex.test(value)) {
+      return false
+    }
+    let matches = rangeRegex.exec(value)
+    if (matches === null || parseInt(matches[1]) > parseInt(matches[2])) {
+      return true
+    }
+    return false
+  }
+  const invalidRangeFilters = Object.entries(filters).filter(
+    isInvalidRangeFilter
+  )
+  if (invalidRangeFilters.length) {
+    res.status(400).json({
+      error: 'Invalid range values',
+      invalidRangeFilters: Object.fromEntries(invalidRangeFilters),
+    })
+    return { filters: null }
+  }
+
   // case insensitive search on string fields (eg. /api/bands?name=aSi will get you Oasis)
   model
     .getFilters()
@@ -102,6 +131,21 @@ module.exports = async (req, res, model, relatedModelOptions = {}) => {
     .forEach((arrayTypeProp) => {
       let values = filters[arrayTypeProp].split(',')
       filters[arrayTypeProp] = { $in: values }
+    })
+
+  // $gte, $lte filter for range fields
+  model
+    .getRangeFilters()
+    .filter((filter) => Object.keys(filters).includes(filter))
+    .forEach((rangeTypeProp) => {
+      let value = filters[rangeTypeProp]
+      // single value range (eg. /api/songs?rating=8)
+      if (value.indexOf('-') < 1) {
+        filters[rangeTypeProp] = { $gte: value, $lt: parseInt(value) + 1 }
+        return
+      }
+      let [min, max] = value.split('-')
+      filters[rangeTypeProp] = { $gte: min, $lte: max }
     })
 
   // filtering by relatedModel

@@ -11,6 +11,76 @@ const connect = require('./helpers/connect')
 const fillModel = require('./helpers/fillModel')
 
 module.exports = {
+  get: async (req, res) => {
+    if (!(await connect(res))) {
+      return
+    }
+    const { filters, options } = await buildFilters(req, res, Song, {
+      relatedModel: Album,
+      relatedModelKey: req.params.albumKey,
+    })
+
+    if (!filters || !options) {
+      return
+    }
+
+    if (filters.duration) {
+      if (!/^\d$/.test(filters.duration)) {
+        res.status(400).json({
+          error: 'duration must be a positive integer',
+        })
+        return
+      }
+      let durationInSec = parseInt(filters.duration) * 60
+      filters.duration = {
+        $gte: durationInSec,
+        $lt: durationInSec + 60,
+      }
+    }
+
+    if (filters.rating) {
+      let [min, max] = Object.values(filters.rating)
+      if (min < 0 || max > 10) {
+        res.status(400).json({
+          error:
+            'rating must be an integer between 0 and 10 or a valid min-max range (with min and max between 0 and 10)',
+        })
+        return
+      }
+    }
+
+    // additional checks if a band is provided
+    let relatedAlbum = filters.$and?.at(0).album
+    if (
+      relatedAlbum?.band &&
+      !(await checkRelatedModel(
+        req.params.bandKey,
+        res,
+        Band,
+        relatedAlbum.band
+      ))
+    ) {
+      return
+    }
+
+    Song.find(filters, null, options, (err, docs) => {
+      if (err) {
+        res.status(500).json({
+          error: 'Internal mongoDB error',
+        })
+        return
+      }
+      if (docs.length === 0) {
+        res.status(404).json({
+          error: 'No song found with the given filters',
+          filters,
+        })
+        return
+      }
+      res.status(200).json(docs)
+    })
+  },
+
   post: async (req, res) => {
     if (!(await connect(res))) {
       return

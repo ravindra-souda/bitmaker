@@ -50,6 +50,24 @@ router.delete('/bands/:bandKey/albums/:key', (req, res) => {
   albumController.delete(req, res)
 })
 
+router.get('/songs/:key', (req, res) => {
+  songController.get(req, res)
+})
+router.get('/songs', (req, res) => {
+  songController.get(req, res)
+})
+router.get('/albums/:albumKey/songs/:key', (req, res) => {
+  songController.get(req, res)
+})
+router.get('/albums/:albumKey/songs', (req, res) => {
+  songController.get(req, res)
+})
+router.get('/bands/:bandKey/albums/:albumKey/songs/:key', (req, res) => {
+  songController.get(req, res)
+})
+router.get('/bands/:bandKey/albums/:albumKey/songs', (req, res) => {
+  songController.get(req, res)
+})
 router.post('/bands/:bandKey/albums/:key/songs', (req, res) => {
   songController.post(req, res)
 })

@@ -92,6 +92,18 @@ songSchema.virtual('myRating').set(function (val) {
 songSchema.statics.getFields = function () {
   return ['title', 'position', 'duration', 'singers', 'lyrics', 'myRating']
 }
+songSchema.statics.getFilters = function () {
+  return ['title', 'duration', 'singers', 'rating']
+}
+songSchema.statics.getEnumFilters = function () {
+  return {}
+}
+songSchema.statics.getRangeFilters = function () {
+  return ['rating']
+}
+songSchema.statics.getSortables = function () {
+  return ['title', 'position', 'duration', 'rating']
+}
 
 songSchema.post('validate', async function () {
   const duplicateSongPosition = await mongoose

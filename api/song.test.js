@@ -475,6 +475,707 @@ describe('POST /songs', () => {
   })
 })
 
+const getPayloads = {
+  validBandFetchedById: {
+    name: 'Capital Cities',
+    formationYear: 2010,
+    bio: `Capital Cities a débuté en écrivant des jingles commerciaux avant d'orienter ses talents de compositeurs brillants et accrocheurs vers le monde de la pop.`,
+    tags: ['indie-pop', 'synth-pop', 'indietronica'],
+  },
+  validAlbumsForBandFetchedById: new Map([
+    [
+      '_id',
+      {
+        title: 'In a Tidal Wave of Mystery',
+        releaseDate: new Date('2013-06-04').toJSON(),
+        type: 'Studio',
+        tags: ['indie-pop'],
+      },
+    ],
+    [
+      'code',
+      {
+        title: 'Solarize',
+        releaseDate: new Date('2018-08-10').toJSON(),
+        type: 'Studio',
+        tags: ['synth-pop'],
+      },
+    ],
+  ]),
+  validSongsForBandFetchedById: new Map([
+    [
+      3,
+      {
+        title: 'Kangaroo Court',
+        position: 3,
+        duration: '03:43',
+        singers: 'Ryan Merchant, Sebu Simonian',
+      },
+    ],
+    [
+      2,
+      {
+        title: 'I Sold My Bed, But Not My Stereo (radio edit)',
+        position: 4,
+        duration: '08:54',
+        myRating: 5,
+      },
+    ],
+    [
+      4,
+      {
+        title: 'Origami',
+        position: 8,
+        duration: '03:45',
+        myRating: 4,
+      },
+    ],
+    [
+      5,
+      {
+        title: 'Swimming Pool Summer',
+        position: 2,
+        duration: '08:33',
+        singers: '?',
+      },
+    ],
+    [
+      1,
+      {
+        title: 'Drop Everything (radio edit)',
+        position: 6,
+        duration: '03:10',
+        singers: 'Ryan Merchant, Sebu Simonian',
+        myRating: 9,
+      },
+    ],
+  ]),
+  validBandFetchedByCode: {
+    name: 'The xx',
+    formationYear: 2005,
+    bio: `The xx est un groupe de rock britannique aux sonorités épurées se rapprochant parfois de la musique minimaliste.`,
+    tags: ['indie-rock', 'indie-pop'],
+  },
+  validAlbumsForBandFetchedByCode: new Map([
+    [
+      '_id',
+      {
+        title: 'xx',
+        releaseDate: new Date('2009-08-14').toJSON(),
+        type: 'Studio',
+        tags: ['indie-pop'],
+      },
+    ],
+    [
+      'code',
+      {
+        title: 'Coexist',
+        releaseDate: new Date('2012-09-05').toJSON(),
+        type: 'Studio',
+        tags: ['indie-pop'],
+      },
+    ],
+  ]),
+  validSongsForBandFetchedByCode: new Map([
+    [
+      2,
+      {
+        title: 'Crystalised',
+        position: 3,
+        duration: '03:21',
+        singers: 'Romy Madley Croft, Oliver Sim',
+      },
+    ],
+    [
+      3,
+      {
+        title: 'Night Time',
+        position: 10,
+        duration: '03:36',
+      },
+    ],
+    [
+      1,
+      {
+        title: 'Chained (radio edit)',
+        position: 2,
+        duration: '02:47',
+      },
+    ],
+    [
+      4,
+      {
+        title: 'Sunset',
+        position: 6,
+        duration: '03:38',
+        myRating: 6,
+      },
+    ],
+    [
+      5,
+      {
+        title: 'Swept Away (edit)',
+        position: 10,
+        duration: '08:59',
+        myRating: 9,
+      },
+    ],
+  ]),
+  albumKeys: [],
+  validSongFetchedById: {},
+  validSongFetchedByCode: {},
+  expectedSongsForBandFetchedById: {},
+  expectedSongsForBandFetchedByCode: {},
+  validSongsByAlbumForBandFetchedById: new Map(),
+  validSongsByAlbumForBandFetchedByCode: new Map(),
+}
+
+getPayloads.validSongFetchedById = {
+  ...getPayloads.validSongsForBandFetchedById.get(4),
+  rating: '4.00',
+}
+/* TODO: remove this when the user resource is implemented */
+delete getPayloads.validSongFetchedById.myRating
+
+getPayloads.validSongFetchedByCode = {
+  ...getPayloads.validSongsForBandFetchedByCode.get(5),
+  rating: '9.00',
+}
+/* TODO: remove this when the user resource is implemented */
+delete getPayloads.validSongFetchedByCode.myRating
+
+const formatRating = (song, key, map) => {
+  if (song.myRating) {
+    /* TODO: remove this when the user resource is implemented */
+    let formattedSong = { ...song, rating: song.myRating.toFixed(2) }
+    delete formattedSong.myRating
+    map.set(key, formattedSong)
+  }
+}
+getPayloads.expectedSongsForBandFetchedById = new Map(
+  Array.from(getPayloads.validSongsForBandFetchedById)
+)
+getPayloads.expectedSongsForBandFetchedById.forEach(formatRating)
+getPayloads.expectedSongsForBandFetchedByCode = new Map(
+  Array.from(getPayloads.validSongsForBandFetchedByCode)
+)
+getPayloads.expectedSongsForBandFetchedByCode.forEach(formatRating)
+
+getPayloads.validSongsByAlbumForBandFetchedById.set('_id', [
+  getPayloads.validSongsForBandFetchedById.get(3),
+  getPayloads.validSongsForBandFetchedById.get(2),
+  getPayloads.validSongsForBandFetchedById.get(4),
+])
+getPayloads.validSongsByAlbumForBandFetchedById.set('code', [
+  getPayloads.validSongsForBandFetchedById.get(5),
+  getPayloads.validSongsForBandFetchedById.get(1),
+])
+getPayloads.validSongsByAlbumForBandFetchedByCode.set('_id', [
+  getPayloads.validSongsForBandFetchedByCode.get(3),
+  getPayloads.validSongsForBandFetchedByCode.get(2),
+])
+getPayloads.validSongsByAlbumForBandFetchedByCode.set('code', [
+  getPayloads.validSongsForBandFetchedByCode.get(4),
+  getPayloads.validSongsForBandFetchedByCode.get(1),
+  getPayloads.validSongsForBandFetchedByCode.get(5),
+])
+
+describe('GET /songs', () => {
+  beforeAll(async () => {
+    // POST band (id)
+    let albumKeys = []
+    let res = await request(app)
+      .post('/api/bands')
+      .send(getPayloads.validBandFetchedById)
+    postedBandId = res.body._id
+    bandIdsToClear.push(postedBandId)
+    // POST related albums
+    for (let [key, album] of getPayloads.validAlbumsForBandFetchedById) {
+      let res = await request(app)
+        .post(`/api/bands/${postedBandId}/albums`)
+        .send(album)
+      albumIdsToClear.push(res.body._id)
+      if (
+        album.title ===
+        getPayloads.validAlbumsForBandFetchedById.get('_id').title
+      ) {
+        postedAlbumId = res.body._id
+      }
+      albumKeys[key] = res.body[key]
+    }
+    getPayloads.albumKeys['_id'] = albumKeys
+    // POST songs in their related albums
+    for (let [key, songs] of getPayloads.validSongsByAlbumForBandFetchedById) {
+      for (let song of songs) {
+        let res = await request(app)
+          .post(`/api/bands/${postedBandId}/albums/${albumKeys[key]}/songs`)
+          .send(song)
+        if (song.title === getPayloads.validSongFetchedById.title) {
+          postedSongId = res.body._id
+        }
+      }
+    }
+
+    // POST band (code)
+    albumKeys = []
+    res = await request(app)
+      .post('/api/bands')
+      .send(getPayloads.validBandFetchedByCode)
+    postedBandCode = res.body.code
+    bandIdsToClear.push(res.body._id)
+    // POST related albums
+    for (let [key, album] of getPayloads.validAlbumsForBandFetchedByCode) {
+      let res = await request(app)
+        .post(`/api/bands/${postedBandCode}/albums`)
+        .send(album)
+      albumIdsToClear.push(res.body._id)
+      if (
+        album.title ===
+        getPayloads.validAlbumsForBandFetchedByCode.get('code').title
+      ) {
+        postedAlbumCode = res.body.code
+      }
+      albumKeys[key] = res.body[key]
+    }
+    getPayloads.albumKeys['code'] = albumKeys
+    // POST songs in their related albums
+    for (let [
+      key,
+      songs,
+    ] of getPayloads.validSongsByAlbumForBandFetchedByCode) {
+      for (let song of songs) {
+        let res = await request(app)
+          .post(`/api/bands/${postedBandCode}/albums/${albumKeys[key]}/songs`)
+          .send(song)
+        if (song.title === getPayloads.validSongFetchedByCode.title) {
+          postedSongCode = res.body.code
+        }
+      }
+    }
+  })
+
+  test('search an existing song with id', async () => {
+    const res = await request(app).get('/api/songs/' + postedSongId)
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([getPayloads.validSongFetchedById])
+  })
+  test('search an existing song with code', async () => {
+    const res = await request(app).get('/api/songs/' + postedSongCode)
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([getPayloads.validSongFetchedByCode])
+  })
+  test('search an existing song and returned json should not show album-songs recursion', async () => {
+    const res = await request(app).get('/api/songs/' + postedSongCode)
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([getPayloads.validSongFetchedByCode])
+    expect(res.body[0].album).toMatchObject(
+      getPayloads.validAlbumsForBandFetchedByCode.get('code')
+    )
+    expect(res.body[0].album).toHaveProperty('songs')
+    expect(res.body[0].album.songs).not.toHaveProperty('album')
+  })
+  test('search an existing song with id filtered by album', async () => {
+    const res = await request(app).get(
+      `/api/albums/${postedAlbumId}/songs/${postedSongId}`
+    )
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([getPayloads.validSongFetchedById])
+  })
+  test('search an existing album with code filtered by album', async () => {
+    const res = await request(app).get(
+      `/api/albums/${postedAlbumCode}/songs/${postedSongCode}`
+    )
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([getPayloads.validSongFetchedByCode])
+  })
+  test('search an existing song with id filtered by band and album', async () => {
+    const res = await request(app).get(
+      `/api/bands/${postedBandId}/albums/${postedAlbumId}/songs/${postedSongId}`
+    )
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([getPayloads.validSongFetchedById])
+  })
+  test('search an existing song with code filtered by band and album', async () => {
+    const res = await request(app).get(
+      `/api/bands/${postedBandCode}/albums/${postedAlbumCode}/songs/${postedSongCode}`
+    )
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([getPayloads.validSongFetchedByCode])
+  })
+  test('search all existing songs for a given album (id)', async () => {
+    const res = await request(app).get(`/api/albums/${postedAlbumId}/songs`)
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([
+      getPayloads.expectedSongsForBandFetchedById.get(2),
+      getPayloads.expectedSongsForBandFetchedById.get(3),
+      getPayloads.expectedSongsForBandFetchedById.get(4),
+    ])
+  })
+  test('search all existing songs for a given album (code)', async () => {
+    const res = await request(app).get(`/api/albums/${postedAlbumCode}/songs`)
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([
+      getPayloads.expectedSongsForBandFetchedByCode.get(1),
+      getPayloads.expectedSongsForBandFetchedByCode.get(4),
+      getPayloads.expectedSongsForBandFetchedByCode.get(5),
+    ])
+  })
+  test('search all existing songs for a given album filtered by band (id)', async () => {
+    const res = await request(app).get(
+      `/api/bands/${postedBandId}/albums/${getPayloads.albumKeys['_id']['code']}/songs`
+    )
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([
+      getPayloads.expectedSongsForBandFetchedById.get(1),
+      getPayloads.expectedSongsForBandFetchedById.get(5),
+    ])
+  })
+  test('search all existing songs for a given album filtered by band (code)', async () => {
+    const res = await request(app).get(
+      `/api/bands/${postedBandCode}/albums/${getPayloads.albumKeys['code']['_id']}/songs`
+    )
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([
+      getPayloads.expectedSongsForBandFetchedByCode.get(2),
+      getPayloads.expectedSongsForBandFetchedByCode.get(3),
+    ])
+  })
+  test('search an existing song with title', async () => {
+    const expectedSongs = [
+      getPayloads.expectedSongsForBandFetchedByCode.get(1),
+      getPayloads.expectedSongsForBandFetchedById.get(1),
+      getPayloads.expectedSongsForBandFetchedById.get(2),
+    ]
+    let res = await request(app).get('/api/songs?title=(radi')
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject(expectedSongs)
+    res = await request(app).get('/api/songs?title=(RADI')
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject(expectedSongs)
+  })
+  test('search an existing song with duration', async () => {
+    const res = await request(app).get('/api/songs?duration=8')
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([
+      getPayloads.expectedSongsForBandFetchedById.get(2),
+      getPayloads.expectedSongsForBandFetchedByCode.get(5),
+      getPayloads.expectedSongsForBandFetchedById.get(5),
+    ])
+  })
+  test('search an existing song with singers', async () => {
+    const res = await request(app).get('/api/songs?singers=m')
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([
+      getPayloads.expectedSongsForBandFetchedByCode.get(2),
+      getPayloads.expectedSongsForBandFetchedById.get(1),
+      getPayloads.expectedSongsForBandFetchedById.get(3),
+    ])
+  })
+  test('search an existing song with rating', async () => {
+    let res = await request(app).get('/api/songs?rating=6')
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([
+      getPayloads.expectedSongsForBandFetchedByCode.get(4),
+    ])
+    let songIdToUpdate = res.body[0]._id
+    // update this song to have a 5.5 rating
+    res = await request(app)
+      .patch('/api/songs/' + songIdToUpdate)
+      .send({
+        _id: songIdToUpdate,
+        title: getPayloads.validSongsForBandFetchedByCode.get(4).title,
+        myRating: 5,
+      })
+    expect(res.statusCode).toEqual(200)
+    getPayloads.expectedSongsForBandFetchedByCode.get(4).rating = '5.50'
+    // should get every song with a rating between 5.00 and 5.99
+    const ratingUpdatedSong = {
+      ...getPayloads.expectedSongsForBandFetchedByCode.get(4),
+      rating: '5.50',
+    }
+    res = await request(app).get('/api/songs?rating=5')
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([
+      getPayloads.expectedSongsForBandFetchedById.get(2),
+      ratingUpdatedSong,
+    ])
+    // should get every song with a rating between 4.00 and 6.00
+    res = await request(app).get('/api/songs?rating=4-6')
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([
+      getPayloads.expectedSongsForBandFetchedById.get(2),
+      getPayloads.expectedSongsForBandFetchedById.get(4),
+      ratingUpdatedSong,
+    ])
+    // should get every song with a rating between 4.1 and 6.00
+    res = await request(app).get('/api/songs?rating=4.1-6')
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([
+      getPayloads.expectedSongsForBandFetchedById.get(2),
+      ratingUpdatedSong,
+    ])
+  })
+  test('search an existing song with title for a given album (id)', async () => {
+    const res = await request(app).get(
+      `/api/albums/${postedAlbumId}/songs?title=g`
+    )
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([
+      getPayloads.expectedSongsForBandFetchedById.get(3),
+      getPayloads.expectedSongsForBandFetchedById.get(4),
+    ])
+  })
+  test('search an existing song with title for a given album (code)', async () => {
+    const res = await request(app).get(
+      `/api/albums/${postedAlbumCode}/songs?title=s`
+    )
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([
+      getPayloads.expectedSongsForBandFetchedByCode.get(4),
+      getPayloads.expectedSongsForBandFetchedByCode.get(5),
+    ])
+  })
+  test('search an existing song with title filtered by band and album (id)', async () => {
+    const res = await request(app).get(
+      `/api/bands/${postedBandId}/albums/${postedAlbumId}/songs?title=i`
+    )
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([
+      getPayloads.expectedSongsForBandFetchedById.get(2),
+      getPayloads.expectedSongsForBandFetchedById.get(4),
+    ])
+  })
+  test('search an existing song with title filtered by band and album (code)', async () => {
+    const res = await request(app).get(
+      `/api/bands/${postedBandCode}/albums/${postedAlbumCode}/songs?title=n`
+    )
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([
+      getPayloads.expectedSongsForBandFetchedByCode.get(1),
+      getPayloads.expectedSongsForBandFetchedByCode.get(4),
+    ])
+  })
+  test('use parameter limit to get 3 songs out of 5', async () => {
+    const res = await request(app).get('/api/songs?title=ed&limit=3')
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([
+      getPayloads.expectedSongsForBandFetchedByCode.get(1),
+      getPayloads.expectedSongsForBandFetchedByCode.get(2),
+      getPayloads.expectedSongsForBandFetchedById.get(1),
+    ])
+  })
+  test('use parameter skip to get the last 4 songs', async () => {
+    const res = await request(app).get('/api/songs?title=ed&skip=1')
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([
+      getPayloads.expectedSongsForBandFetchedByCode.get(2),
+      getPayloads.expectedSongsForBandFetchedById.get(1),
+      getPayloads.expectedSongsForBandFetchedById.get(2),
+      getPayloads.expectedSongsForBandFetchedByCode.get(5),
+    ])
+  })
+  test('sort results based on reverse rating, then on duration', async () => {
+    const res = await request(app).get(
+      '/api/songs?title=ed&sort=-rating,duration'
+    )
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([
+      getPayloads.expectedSongsForBandFetchedById.get(1),
+      getPayloads.expectedSongsForBandFetchedByCode.get(5),
+      getPayloads.expectedSongsForBandFetchedById.get(2),
+      getPayloads.expectedSongsForBandFetchedByCode.get(1),
+      getPayloads.expectedSongsForBandFetchedByCode.get(2),
+    ])
+  })
+  test('combine limit, skip and sort parameters', async () => {
+    const res = await request(app).get(
+      '/api/songs?title=ed&limit=3&skip=1&sort=rating,-title'
+    )
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([
+      getPayloads.expectedSongsForBandFetchedByCode.get(1),
+      getPayloads.expectedSongsForBandFetchedById.get(2),
+      getPayloads.expectedSongsForBandFetchedByCode.get(5),
+    ])
+  })
+  test('combine limit, skip and sort parameters filtered by album (id)', async () => {
+    const res = await request(app).get(
+      `/api/albums/${postedAlbumId}/songs?limit=2&skip=1&sort=-title`
+    )
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([
+      getPayloads.expectedSongsForBandFetchedById.get(3),
+      getPayloads.expectedSongsForBandFetchedById.get(2),
+    ])
+  })
+  test('combine limit, skip and sort parameters filtered by album (code)', async () => {
+    const res = await request(app).get(
+      `/api/albums/${postedAlbumCode}/songs?limit=1&skip=2&sort=title`
+    )
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([
+      getPayloads.expectedSongsForBandFetchedByCode.get(5),
+    ])
+  })
+  test('combine limit, skip and sort parameters filtered by band and album (id)', async () => {
+    const res = await request(app).get(
+      `/api/bands/${postedBandId}/albums/${postedAlbumId}/songs?limit=2&skip=1&sort=duration`
+    )
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([
+      getPayloads.expectedSongsForBandFetchedById.get(4),
+      getPayloads.expectedSongsForBandFetchedById.get(2),
+    ])
+  })
+  test('combine limit, skip and sort parameters filtered by band and album (code)', async () => {
+    const res = await request(app).get(
+      `/api/bands/${postedBandCode}/albums/${postedAlbumCode}/songs?limit=1&skip=2&sort=-duration`
+    )
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toMatchObject([
+      getPayloads.expectedSongsForBandFetchedByCode.get(1),
+    ])
+  })
+  test.each([
+    -1,
+    11,
+    '?',
+    null,
+    'a-5',
+    '2-b',
+    '6-3',
+    '4-',
+    '1.-2',
+    '1-2.',
+    '.1-2',
+    '0-.2',
+    '1..2-2',
+    '1.1.1-2',
+    '-1-5',
+    '6-11',
+  ])('throw error 400 on invalid rating', async (value) => {
+    let res = await request(app).get('/api/songs?rating=' + value)
+    expect(res.statusCode).toEqual(400)
+  })
+  test.each([-2, '1.2', '!', '3minutes', null])(
+    'throw error 400 on invalid duration',
+    async (value) => {
+      let res = await request(app).get('/api/songs?duration=' + value)
+      expect(res.statusCode).toEqual(400)
+    }
+  )
+  test('throw error 400 on invalid filters', async () => {
+    const res = await request(app).get('/api/songs?dummy=value')
+    expect(res.statusCode).toEqual(400)
+    expect(res.body).toHaveProperty('invalidFilters', ['dummy'])
+  })
+  test('throw error 400 on invalid limit and skip parameters', async () => {
+    let res = await request(app).get('/api/songs?limit=-1')
+    expect(res.statusCode).toEqual(400)
+    res = await request(app).get('/api/songs?skip=1.5')
+    expect(res.statusCode).toEqual(400)
+    res = await request(app).get('/api/songs?limit=a&skip=b')
+    expect(res.statusCode).toEqual(400)
+  })
+  test('throw error 400 on limit parameter too high', async () => {
+    const res = await request(app).get(
+      '/api/songs?limit=' + (parseInt(process.env.MONGODB_LIMIT_RESULTS) + 1)
+    )
+    expect(res.statusCode).toEqual(400)
+  })
+  test('throw error 400 on invalid sort parameters', async () => {
+    const res = await request(app).get('/api/songs?sort=dummy')
+    expect(res.statusCode).toEqual(400)
+    expect(res.body).toHaveProperty('invalidSortables', ['dummy'])
+  })
+  test('throw error 404 on song not found', async () => {
+    let res = await request(app).get(
+      '/api/songs/' + postedSongId.slice(1) + postedSongId.charAt(0)
+    )
+    expect(res.statusCode).toEqual(404)
+    expect(res.body).toHaveProperty('error')
+    res = await request(app).get('/api/songs/dummy')
+    expect(res.statusCode).toEqual(404)
+    expect(res.body).toHaveProperty('error')
+    res = await request(app).get('/api/songs?title=dummy')
+    expect(res.statusCode).toEqual(404)
+    expect(res.body).toHaveProperty('error')
+  })
+  test('throw error 404 on mismatching related album (id)', async () => {
+    const res = await request(app).get(
+      `/api/albums/${postedAlbumId}/songs/${postedSongCode}`
+    )
+    expect(res.statusCode).toEqual(404)
+    expect(res.body).toHaveProperty('error')
+  })
+  test('throw error 404 on mismatching related album (code)', async () => {
+    const res = await request(app).get(
+      `/api/albums/${postedAlbumCode}/songs/${postedSongId}`
+    )
+    expect(res.statusCode).toEqual(404)
+    expect(res.body).toHaveProperty('error')
+  })
+  test('throw error 404 on unknown related album (id)', async () => {
+    const res = await request(app).get(
+      `/api/albums/${
+        postedAlbumId.slice(1) + postedAlbumId.charAt(0)
+      }/songs/${postedSongId}`
+    )
+    expect(res.statusCode).toEqual(404)
+    expect(res.body).toHaveProperty('error')
+  })
+  test('throw error 404 on unknown related album (code)', async () => {
+    const res = await request(app).get(
+      `/api/albums/${postedAlbumCode.slice(1)}/songs/${postedSongCode}`
+    )
+    expect(res.statusCode).toEqual(404)
+    expect(res.body).toHaveProperty('error')
+  })
+  test('throw error 404 on mismatching related band (id)', async () => {
+    const res = await request(app).get(
+      `/api/bands/${postedBandId}/albums/${postedAlbumId}/songs/${postedSongCode}`
+    )
+    expect(res.statusCode).toEqual(404)
+    expect(res.body).toHaveProperty('error')
+  })
+  test('throw error 404 on mismatching related band (code)', async () => {
+    const res = await request(app).get(
+      `/api/bands/${postedBandCode}/albums/${postedAlbumCode}/songs/${postedSongId}`
+    )
+    expect(res.statusCode).toEqual(404)
+    expect(res.body).toHaveProperty('error')
+  })
+  test('throw error 404 on unknown related band (id)', async () => {
+    const res = await request(app).get(
+      `/api/bands/${
+        postedBandId.slice(1) + postedBandId.charAt(0)
+      }/albums/${postedAlbumId}/songs/${postedSongId}`
+    )
+    expect(res.statusCode).toEqual(404)
+    expect(res.body).toHaveProperty('error')
+  })
+  test('throw error 404 on unknown related band (code)', async () => {
+    const res = await request(app).get(
+      `/api/bands/${postedBandCode.slice(
+        1
+      )}/albums/${postedAlbumCode}/songs/${postedSongCode}`
+    )
+    expect(res.statusCode).toEqual(404)
+    expect(res.body).toHaveProperty('error')
+  })
+
+  afterAll(async () => {
+    await Band.deleteMany({ $or: [{ _id: bandIdsToClear }] }, (err) => {
+      if (err) console.log(err)
+    })
+    bandIdsToClear = []
+    await Album.deleteMany({ $or: [{ _id: albumIdsToClear }] }, (err) => {
+      if (err) console.log(err)
+    })
+    albumIdsToClear = []
+  })
+})
+
 const patchPayloads = {
   validBandWithCode: {
     name: 'London Grammar',

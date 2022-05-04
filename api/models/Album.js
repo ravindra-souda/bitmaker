@@ -77,6 +77,9 @@ albumSchema.statics.getFilters = function () {
 albumSchema.statics.getEnumFilters = function () {
   return { type: typeEnums }
 }
+albumSchema.statics.getRangeFilters = function () {
+  return []
+}
 albumSchema.statics.getSortables = function () {
   return ['title', 'releaseDate']
 }
