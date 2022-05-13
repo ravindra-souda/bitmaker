@@ -101,7 +101,7 @@ module.exports = {
   },
 
   delete: async (req, res) => {
-    const bandToDelete = await checkModel(req, res, Band, true)
+    const bandToDelete = await checkModel(req, res, Band, 'name')
 
     if (!bandToDelete) {
       return
