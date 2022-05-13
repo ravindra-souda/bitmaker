@@ -71,6 +71,9 @@ albumSchema.statics.getFields = function () {
 albumSchema.statics.getFilters = function () {
   return ['title', 'releaseDate', 'releaseYear', 'type', 'tags']
 }
+albumSchema.statics.getRangeFilters = function () {
+  return []
+}
 albumSchema.statics.getSortables = function () {
   return ['title', 'releaseDate']
 }
