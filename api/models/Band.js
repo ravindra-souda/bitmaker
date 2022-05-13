@@ -39,6 +39,12 @@ const bandSchema = new mongoose.Schema(
 bandSchema.statics.getFields = function () {
   return ['name', 'formationYear', 'bio', 'tags']
 }
+bandSchema.statics.getFilters = function () {
+  return ['name', 'formationYear', 'tags']
+}
+bandSchema.statics.getSortables = function () {
+  return ['name', 'formationYear']
+}
 
 bandSchema.pre('save', function (next) {
   this.code = slugify(this.name)
