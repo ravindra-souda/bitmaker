@@ -65,6 +65,7 @@ const songSchema = new mongoose.Schema(
     album: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Album',
+      autopopulate: true,
     },
   },
   {
@@ -118,6 +119,9 @@ const removePrivateProps = (savedSong, song) => {
 
 // always shows getters and use a transform function to remove any private props in the returned documents
 mongoose.set('toJSON', { getters: true, transform: removePrivateProps })
+
+// needed for the recursion-free populate
+songSchema.options.selectPopulatedPaths = false
 
 songSchema.plugin(require('mongoose-autopopulate'))
 
