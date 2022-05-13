@@ -48,6 +48,12 @@ const albumSchema = new mongoose.Schema(
 albumSchema.statics.getFields = function () {
   return ['title', 'releaseDate', 'type', 'tags']
 }
+albumSchema.statics.getFilters = function () {
+  return ['title', 'releaseDate', 'releaseYear', 'type', 'tags']
+}
+albumSchema.statics.getSortables = function () {
+  return ['title', 'releaseDate']
+}
 
 albumSchema.pre('save', async function (next) {
   if (!this.code) {

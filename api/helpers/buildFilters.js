@@ -5,7 +5,7 @@ const SchemaString = require('mongoose').SchemaTypes.String
 const buildFiltersOptions = require('./buildFiltersOptions')
 const escapeStringRegexp = require('escape-string-regexp')
 
-module.exports = (req, res, model) => {
+module.exports = async (req, res, model, relatedModelOptions = {}) => {
   const reservedParameters = ['limit', 'skip', 'sort']
   const invalidFilters = Object.keys(req.query).filter(
     (field) => !model.getFilters().concat(reservedParameters).includes(field)
@@ -63,6 +63,25 @@ module.exports = (req, res, model) => {
       let values = filters[arrayTypeProp].split(',')
       filters[arrayTypeProp] = { $in: values }
     })
+
+  // filtering by relatedModel
+  const { relatedModel, relatedModelKey } = relatedModelOptions
+  if (relatedModelKey) {
+    let relatedModelFilter = mongoose.isValidObjectId(relatedModelKey)
+      ? { _id: relatedModelKey }
+      : { code: relatedModelKey }
+    const foundRelatedModel = await relatedModel
+      .findOne(relatedModelFilter)
+      .exec()
+    if (!foundRelatedModel) {
+      res.status(404).json({
+        error: `No ${relatedModel.modelName} recorded with the provided _id or code: ${relatedModelKey}`,
+      })
+      return { filters: null }
+    }
+
+    filters[relatedModel.modelName.toLowerCase()] = foundRelatedModel
+  }
 
   // GET request with a key (_id or code)
   if (req.params.key) {
