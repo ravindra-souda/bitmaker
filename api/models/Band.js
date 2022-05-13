@@ -26,6 +26,16 @@ const bandSchema = new mongoose.Schema(
       type: [String],
       set: (tags) => [...new Set(tags.map((tag) => slugify(tag)))],
     },
+    albums: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Album',
+        // avoid recursion (Band document containing an album array showing again our Band)
+        autopopulate: {
+          select: ['title', 'code', 'releaseDate', 'type', 'tags', 'songs'],
+        },
+      },
+    ],
   },
   {
     timestamps: {
@@ -50,5 +60,10 @@ bandSchema.pre('save', function (next) {
   this.code = slugify(this.name)
   next()
 })
+
+// needed for the recursion-free populate
+bandSchema.options.selectPopulatedPaths = false
+
+bandSchema.plugin(require('mongoose-autopopulate'))
 
 module.exports = mongoose.model('Band', bandSchema)
