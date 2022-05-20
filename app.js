@@ -14,6 +14,7 @@ const {
   checkJson,
   trimJson,
 } = require('./api/middleware/checkRequest')
+const { t } = require('./api/middleware/getTranslations')
 
 const app = express()
 
@@ -23,6 +24,7 @@ app.use(logger('dev'))
 app.use(checkHeaders)
 app.use(express.json({ verify: checkJson }))
 app.use(trimJson)
+app.use(t)
 app.use(express.urlencoded({ extended: false }))
 app.use(cookieParser())
 app.use(express.static(path.join(__dirname, 'public')))

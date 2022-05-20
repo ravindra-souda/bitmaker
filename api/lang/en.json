@@ -1,7 +1,7 @@
 {
   "album": {
     "errors": {
-      "not-found": "No album found with the given filters",
+      "notFound": "No album found with the given filters",
       "validation": "Submitted album validation failed",
       "update-band": "Could not update the related band",
       "delete": "Album deletion failed",
