@@ -48,7 +48,7 @@ module.exports = {
       if (docs.length === 0) {
         res.status(404).json({
           error: 'No album found with the given filters',
-          t: req.app.locals.t.album.errors.notFound,
+          t: req.app.locals.translations.album.errors.notFound,
           //u: global.t.album.errors.notFound,
           filters: filters,
         })
