@@ -59,7 +59,8 @@ module.exports = {
       if (err) {
         let errMessages = jsonQuery('errors[**].message', { data: err })
         res.status(400).json({
-          error: 'Submitted band validation failed',
+          //error: 'Submitted band validation failed',
+          error: req.app.locals.translations.band.errors.validation,
           messages: errMessages.value,
         })
         return

@@ -1,13 +1,16 @@
+const express = require('express')
 const mongoose = require('mongoose')
 const slugify = require('../helpers/slugify')
 const { Album } = require('./Album')
 const yearNow = new Date().getFullYear()
 
+const app = express()
 const bandSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: [true, 'A band must have a name'],
+      //required: [true, 'A band must have a name'],
+      required: [true, app.locals.translations.band.errors.props.name],
       trim: true,
     },
     code: {

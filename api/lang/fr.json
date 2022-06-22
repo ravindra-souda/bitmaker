@@ -1,0 +1,70 @@
+{
+  "album": {
+    "errors": {
+      "notFound": "No album found with the given filters",
+      "validation": "Submitted album validation failed",
+      "update-band": "Could not update the related band",
+      "delete": "Album deletion failed",
+      "props": {
+        "title": "An album must have a title",
+        "release-date": {
+          "invalid": "${date.value} is not a valid date!",
+          "min": "releaseDate is before January 01, 1900"
+        },
+        "release-year": "releaseYear must be an integer greater than 1900"
+      }
+    },
+    "success": {
+      "delete": "Album deleted properly"
+    }
+  },
+  "app": {
+    "errors": {
+      "mongo-db": "Internal mongoDB error"
+    }
+  },
+  "band": {
+    "errors": {
+      "not-found": "No band found with the given filters",
+      "creation-same-name": "A band with the same name had already been recorded",
+      "validation": "Le groupe posté n'a pas pu être validé",
+      "cascade-delete": "Band linked to some albums",
+      "cascade-delete-hint": "To delete this band and all of its linked albums, you can set { \"cascadeDeleteAlbums\" : true } in your JSON",
+      "delete": "Band deletion failed",
+      "props": {
+        "name": "Un groupe doit avoir un nom",
+        "formation-year": {
+          "invalid": "${year.value} must be an integer!",
+          "min": "formationYear must be after 1900",
+          "max": "formationYear must be before ${yearNow}"
+        }
+      }
+    },
+    "success": {
+      "delete": "Band deleted properly"
+    }
+  },
+  "song": {
+    "errors": {
+      "duration": "duration must be a positive integer",
+      "rating": "rating must be an integer between 0 and 10 or a valid min-max range (with min and max between 0 and 10)",
+      "not-found": "No song found with the given filters",
+      "validation": "Submitted song validation failed",
+      "update-album": "Could not update the related album",
+      "delete": "Song deletion failed",
+      "props": {
+        "title": "A song must have a title",
+        "position": {
+          "required": "A song must have a position in the album",
+          "invalid": "Position must be a positive integer, ${val} is not valid",
+          "taken": "Another song was previously recorded with the same position"
+        },
+        "duration": "Duration must be in mm:ss format, ${val} is not valid",
+        "my-rating": "myRating must be an integer from 0 to 10"
+      }
+    },
+    "success": {
+      "delete": "Song deleted properly"
+    }
+  }
+}
