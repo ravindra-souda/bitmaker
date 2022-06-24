@@ -10,7 +10,7 @@ const bandSchema = new mongoose.Schema(
     name: {
       type: String,
       //required: [true, 'A band must have a name'],
-      required: [true, app.locals.translations.band.errors.props.name],
+      required: [true, 'band.errors.props.name'],
       trim: true,
     },
     code: {

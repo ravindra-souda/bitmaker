@@ -4,6 +4,7 @@ const buildFilters = require('./helpers/buildFilters')
 const connect = require('./helpers/connect')
 const checkModel = require('./helpers/checkModel')
 const fillModel = require('./helpers/fillModel')
+const t = require('./helpers/translate')
 
 module.exports = {
   get: async (req, res) => {
@@ -61,7 +62,7 @@ module.exports = {
         res.status(400).json({
           //error: 'Submitted band validation failed',
           error: req.app.locals.translations.band.errors.validation,
-          messages: errMessages.value,
+          messages: errMessages.value.map((message) => t(message, req)),
         })
         return
       }

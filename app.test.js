@@ -2,6 +2,7 @@ const mongoose = require('mongoose')
 const request = require('supertest')
 const { readFile } = require('fs/promises')
 const app = require('./app')
+const t = require('./api/helpers/translate')
 
 describe('Main app', () => {
   test('throw error 400 on empty submitted body', async () => {
@@ -75,6 +76,9 @@ describe('Translations', () => {
     expect(res.statusCode).toEqual(400)
     expect(res.body.error).toEqual('lang not supported')
     expect(res.body).toHaveProperty('availableLangs')
+  })
+  test('translation library returns null on unknown key', () => {
+    t('band.errors.props.name')
   })
 })
 
