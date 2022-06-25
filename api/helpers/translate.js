@@ -15,6 +15,7 @@ module.exports = (key, req) => {
   }, [])
   console.log(keys.length, keys, r)
   */
+  /*
   let translations = req.app.locals.translations
   const keys = key.split('.')
   do {
@@ -25,4 +26,14 @@ module.exports = (key, req) => {
     translations = translations[k]
   } while (keys.length > 0)
   return translations
+  */
+  let translations = req.app.locals.translations
+
+  // fetch translated string for a given key
+  key.split('.').every(k => {
+    translations = translations[k]
+    // break if the key is invalid
+    return translations !== undefined
+  })
+  return translations ?? null
 }
