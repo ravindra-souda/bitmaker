@@ -29,7 +29,7 @@ module.exports = (req, vars) => {
   */
   let translations = req.app.locals.translations
   let key, value
-  [key, value = null] = vars.split(' ')
+  [key, value] = vars.split(' ')
 
   // fetch translated string for a given key
   key.split('.').every(k => {

@@ -34,7 +34,7 @@
       "props": {
         "name": "Un groupe doit avoir un nom",
         "formationYear": {
-          "invalid": "${value} doit être un entier!",
+          "invalid": "formationYear (${value}) doit être un entier!",
           "min": "formationYear must be after 1900",
           "max": "formationYear must be before ${yearNow}"
         }
