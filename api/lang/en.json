@@ -34,7 +34,7 @@
       "props": {
         "name": "A band must have a name",
         "formationYear": {
-          "invalid": "${year.value} must be an integer!",
+          "invalid": "formationYear (${value}) must be an integer!",
           "min": "formationYear must be after 1900",
           "max": "formationYear must be before ${yearNow}"
         }
