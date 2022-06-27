@@ -62,7 +62,7 @@ module.exports = {
         res.status(400).json({
           //error: 'Submitted band validation failed',
           error: req.app.locals.translations.band.errors.validation,
-          messages: errMessages.value.map((message) => t(message, req)),
+          messages: errMessages.value.map((message) => t(req, message)),
         })
         return
       }

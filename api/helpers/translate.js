@@ -1,4 +1,4 @@
-module.exports = (key, req) => {
+module.exports = (req, vars) => {
   /*
   const keysArray = []
   const keys = key.split('.')
@@ -28,6 +28,8 @@ module.exports = (key, req) => {
   return translations
   */
   let translations = req.app.locals.translations
+  let key, value
+  [key, value = null] = vars.split(' ')
 
   // fetch translated string for a given key
   key.split('.').every(k => {
@@ -35,5 +37,5 @@ module.exports = (key, req) => {
     // break if the key is invalid
     return translations !== undefined
   })
-  return translations ?? null
+  return translations?.replace('${value}', value) ?? key
 }

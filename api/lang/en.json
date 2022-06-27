@@ -33,7 +33,7 @@
       "delete": "Band deletion failed",
       "props": {
         "name": "A band must have a name",
-        "formation-year": {
+        "formationYear": {
           "invalid": "${year.value} must be an integer!",
           "min": "formationYear must be after 1900",
           "max": "formationYear must be before ${yearNow}"

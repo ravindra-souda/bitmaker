@@ -20,7 +20,7 @@ const bandSchema = new mongoose.Schema(
       type: Number,
       validate: {
         validator: (year) => Number.isInteger(year),
-        message: (year) => `${year.value} must be an integer!`,
+        message: (year) => `band.errors.props.formationYear.invalid ${year.value}`,
       },
       min: [1900, 'Formation year must be after 1900'],
       max: [yearNow, 'Formation year must be before ' + yearNow],
