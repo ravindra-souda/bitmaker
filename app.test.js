@@ -50,7 +50,6 @@ describe('Translations', () => {
     expect(res.statusCode).toEqual(400)
     expect(app.locals.lang).toEqual('en')
     let translationsFromFile = JSON.parse(await readFile(`./api/lang/en.json`, 'utf-8'))
-    //console.log(res.body, [app.locals.translations.band.errors.props.name, translationsFromFile.band.errors.props.name])
     expect(res.body.error).toEqual(app.locals.translations.band.errors.validation)
     expect(res.body.error).toEqual(translationsFromFile.band.errors.validation)
     expect(res.body.messages).toMatchObject([app.locals.translations.band.errors.props.name])
@@ -63,7 +62,6 @@ describe('Translations', () => {
     expect(res.statusCode).toEqual(400)
     expect(app.locals.lang).toEqual('fr')
     let translationsFromFile = JSON.parse(await readFile(`./api/lang/fr.json`, 'utf-8'))
-    //console.log(res.body, [app.locals.translations.band.errors.props.name, translationsFromFile.band.errors.props.name])
     expect(res.body.error).toEqual(app.locals.translations.band.errors.validation)
     expect(res.body.error).toEqual(translationsFromFile.band.errors.validation)
     expect(res.body.messages).toMatchObject([app.locals.translations.band.errors.props.name])
@@ -75,13 +73,10 @@ describe('Translations', () => {
       .send(langPayloads.interpolation)
     expect(res.statusCode).toEqual(400)
     expect(app.locals.lang).toEqual('fr')
-    console.log('body', res.body)
     const req = res.request.app._events.request.request
     let translationsFromFile = JSON.parse(await readFile(`./api/lang/fr.json`, 'utf-8'))
     //console.log(res.body, [app.locals.translations.band.errors.props.name, translationsFromFile.band.errors.props.name])
-    expect(res.body.error).toEqual(app.locals.translations.band.errors.validation)
-    expect(res.body.error).toEqual(translationsFromFile.band.errors.validation)
-    expect(res.body.messages).toMatchObject([t(req, `band.errors.props.formationYear.invalid ${langPayloads.interpolation.formationYear}`)])
+    expect(t(req, `band.errors.props.formationYear.invalid ${langPayloads.interpolation.formationYear}`)).toEqual(translationsFromFile.band.errors.props.formationYear.invalid.replace('${value}', langPayloads.interpolation.formationYear))
     //expect(res.body.messages).toMatchObject([translationsFromFile.band.errors.props.name])
   })
   test('throw error 500 on non supported lang', async () => {
@@ -102,7 +97,6 @@ describe('Translations', () => {
       .post('/api/bands')
       .send(langPayloads.selectedLang)
     const req = res.request.app._events.request.request
-    //console.log(t('band.errors.propz.name', req))
     const unknownKey = 'band.errors.props.namez'
     expect(t(req, unknownKey)).toEqual(unknownKey)
   })
