@@ -116,6 +116,7 @@ describe('POST /bands', () => {
       .post('/api/bands')
       .send(postPayloads.validMinimalBand)
     expect(res.statusCode).toEqual(400)
+    expect(res.body.band).toMatchObject(postPayloads.validMinimalBand)
   })
   test('throw error 400 on invalid formationYear', async () => {
     const res = await request(app)
