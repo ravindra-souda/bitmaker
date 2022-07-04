@@ -25,7 +25,7 @@ module.exports = async (req, res, next) => {
 
   // lang already loaded
   if (lang === req.app.locals.lang) {
-    console.log('lang already loaded')
+    //console.log('lang already loaded')
     return next()
   }
 

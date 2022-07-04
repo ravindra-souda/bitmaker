@@ -26,7 +26,7 @@
   "band": {
     "errors": {
       "not-found": "No band found with the given filters",
-      "creation-same-name": "A band with the same name had already been recorded",
+      "creationSameName": "A band with the same name had already been recorded",
       "validation": "Submitted band validation failed",
       "cascade-delete": "Band linked to some albums",
       "cascade-delete-hint": "To delete this band and all of its linked albums, you can set { \"cascadeDeleteAlbums\" : true } in your JSON",

@@ -3,6 +3,7 @@ const request = require('supertest')
 const slugify = require('./helpers/slugify')
 const app = require('../app')
 const Band = require('./models/Band')
+const t = require('./helpers/translate')
 
 let postedBandId,
   postedBandCode,
@@ -103,12 +104,16 @@ describe('POST /bands', () => {
       .post('/api/bands')
       .send(postPayloads.invalidNameless)
     expect(res.statusCode).toEqual(400)
+    expect(res.body.error).toEqual(app.locals.translations.band.errors.validation)
+    expect(res.body.messages).toEqual([app.locals.translations.band.errors.props.name])
   })
   test('throw error 400 on empty band name', async () => {
     const res = await request(app)
       .post('/api/bands')
       .send(postPayloads.invalidEmptyName)
     expect(res.statusCode).toEqual(400)
+    expect(res.body.error).toEqual(app.locals.translations.band.errors.validation)
+    expect(res.body.messages).toEqual([app.locals.translations.band.errors.props.name])
   })
   // TODO: run this test right after 'create a band with minimal information'
   test('throw error 400 on duplicate band name', async () => {
@@ -116,6 +121,7 @@ describe('POST /bands', () => {
       .post('/api/bands')
       .send(postPayloads.validMinimalBand)
     expect(res.statusCode).toEqual(400)
+    expect(res.body.error).toEqual(app.locals.translations.band.errors.creationSameName)
     expect(res.body.band).toMatchObject(postPayloads.validMinimalBand)
   })
   test('throw error 400 on invalid formationYear', async () => {
@@ -123,6 +129,9 @@ describe('POST /bands', () => {
       .post('/api/bands')
       .send(postPayloads.invalidFormationYear)
     expect(res.statusCode).toEqual(400)
+    const req = res.request.app._events.request.request
+    expect(res.body.error).toEqual(app.locals.translations.band.errors.validation)
+    expect(res.body.messages).toEqual([t(req, `band.errors.props.formationYear.invalid ${postPayloads.invalidFormationYear.formationYear}`)])
   })
   test('throw error 400 on formationYear before 1900', async () => {
     const res = await request(app)
