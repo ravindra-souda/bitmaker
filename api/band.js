@@ -6,6 +6,7 @@ const buildFilters = require('./helpers/buildFilters')
 const connect = require('./helpers/connect')
 const checkModel = require('./helpers/checkModel')
 const fillModel = require('./helpers/fillModel')
+const t = require('./helpers/translate')
 
 module.exports = {
   get: async (req, res) => {
@@ -21,13 +22,13 @@ module.exports = {
     Band.find(filters, null, options, (err, docs) => {
       if (err) {
         res.status(500).json({
-          error: 'Internal mongoDB error',
+          error: res.translations.app.errors.mongoDb,
         })
         return
       }
       if (docs.length === 0) {
         res.status(404).json({
-          error: 'No band found with the given filters',
+          error: res.translations.band.errors.notFound,
           filters: filters,
         })
         return
@@ -51,7 +52,7 @@ module.exports = {
     const existingBand = await Band.findOne({ name: req.body.name }).exec()
     if (existingBand !== null) {
       res.status(400).json({
-        error: 'A band with the same name had already been recorded',
+        error: res.translations.band.errors.creationSameName,
         band: existingBand,
       })
       return
@@ -61,8 +62,8 @@ module.exports = {
       if (err) {
         let errMessages = jsonQuery('errors[**].message', { data: err })
         res.status(400).json({
-          error: 'Submitted band validation failed',
-          messages: errMessages.value,
+          error: res.translations.band.errors.validation,
+          messages: t(res.translations, errMessages),
         })
         return
       }
@@ -90,8 +91,8 @@ module.exports = {
       if (err) {
         let errMessages = jsonQuery('errors[**].message', { data: err })
         res.status(400).json({
-          error: 'Submitted band validation failed',
-          messages: errMessages.value,
+          error: res.translations.band.errors.validation,
+          messages: t(res.translations, errMessages),
         })
         return
       }
@@ -111,9 +112,8 @@ module.exports = {
 
     if (!req.body.cascadeDeleteAlbums && bandToDelete.albums.length) {
       res.status(409).json({
-        error: 'Band linked to some albums',
-        message:
-          'To delete this band and all of its linked albums, you can set { "cascadeDeleteAlbums" : true } in your JSON',
+        error: res.translations.band.errors.cascadeDelete,
+        message: res.translations.band.errors.cascadeDeleteHint,
         linkedAlbums: bandToDelete.albums,
       })
       return
@@ -122,12 +122,12 @@ module.exports = {
     await bandToDelete.remove((err, doc) => {
       if (err) {
         res.status(500).json({
-          error: 'Band deletion failed',
+          error: res.translations.band.errors.delete,
         })
         return
       }
       res.status(200).json({
-        success: `Band deleted properly`,
+        success: res.translations.band.success.delete,
         deleted: doc,
       })
     })

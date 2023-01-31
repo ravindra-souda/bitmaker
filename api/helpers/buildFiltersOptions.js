@@ -1,20 +1,27 @@
 'use strict'
 
+const t = require('./translate')
+
 module.exports = (limit, skip, sort, res, model) => {
   let messages = []
   const regex = /^[0-9]+$/
   if (!regex.test(limit) || limit > process.env.MONGODB_LIMIT_RESULTS) {
     messages.push(
-      `limit value must be a positive integer under ${process.env.MONGODB_LIMIT_RESULTS}: ${limit} is not valid`
+      t(res.translations, 'json.errors.filters.pagination.limit', {
+        apiLimit: process.env.MONGODB_LIMIT_RESULTS,
+        limit,
+      })
     )
   }
   if (!regex.test(skip)) {
-    messages.push(`skip value must be a positive integer: ${skip} is not valid`)
+    messages.push(
+      t(res.translations, 'json.errors.filters.pagination.skip', { skip })
+    )
   }
 
   if (messages.length) {
     res.status(400).json({
-      error: 'Invalid values for pagination parameters found on URL',
+      error: res.translations.json.errors.filters.pagination.invalidValues,
       messages: messages,
     })
     return null
@@ -36,7 +43,7 @@ module.exports = (limit, skip, sort, res, model) => {
 
   if (invalidSortables.length) {
     res.status(400).json({
-      error: 'Invalid sort fields found on URL',
+      error: res.translations.json.errors.filters.sort,
       invalidSortables: invalidSortables,
       expectedSortables: model.getSortables(),
     })

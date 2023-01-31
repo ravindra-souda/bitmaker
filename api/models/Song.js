@@ -7,7 +7,7 @@ const songSchema = new mongoose.Schema(
   {
     title: {
       type: String,
-      required: [true, 'A song must have a title'],
+      required: [true, 'song.errors.props.title'],
       trim: true,
     },
     code: {
@@ -15,7 +15,7 @@ const songSchema = new mongoose.Schema(
     },
     position: {
       type: Number,
-      required: [true, 'A song must have a position in the album'],
+      required: [true, 'song.errors.props.position.required'],
       // setter as a validator (called before type Number cast)
       set: (val) => {
         if (!Number.isInteger(val) || val < 1) {
@@ -81,7 +81,7 @@ const songSchema = new mongoose.Schema(
 
 songSchema.virtual('myRating').set(function (val) {
   if (![...Array(11).keys()].includes(val)) {
-    this.invalidate('myRating', 'myRating must be an integer from 0 to 10', val)
+    this.invalidate('myRating', 'song.errors.props.myRating', val)
     return
   }
   this.ratingSum += val
@@ -111,7 +111,7 @@ songSchema.post('validate', async function () {
     .findOne({ position: this.position, album: this.album })
   if (duplicateSongPosition && !duplicateSongPosition.equals(this)) {
     throw {
-      error: 'Another song was previously recorded with the same position',
+      error: 'song.errors.props.position.taken',
       duplicateSongPosition,
     }
   }

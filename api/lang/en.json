@@ -1,0 +1,101 @@
+{
+  "album": {
+    "errors": {
+      "notFound": "No album found with the given filters",
+      "validation": "Submitted album validation failed",
+      "updateBand": "Could not update the related band",
+      "delete": "Album deletion failed",
+      "props": {
+        "title": "An album must have a title",
+        "releaseDate": {
+          "invalid": "${date} is not a valid date!",
+          "min": "releaseDate is before January 01, 1900"
+        },
+        "releaseYear": "releaseYear must be an integer greater than 1900"
+      }
+    },
+    "success": {
+      "delete": "Album deleted properly"
+    }
+  },
+  "app": {
+    "errors": {
+      "mongoDb": "Internal mongoDB error"
+    }
+  },
+  "band": {
+    "errors": {
+      "notFound": "No band found with the given filters",
+      "creationSameName": "A band with the same name had already been recorded",
+      "validation": "Submitted band validation failed",
+      "cascadeDelete": "Band linked to some albums",
+      "cascadeDeleteHint": "To delete this band and all of its linked albums, you can set { \"cascadeDeleteAlbums\" : true } in your JSON",
+      "delete": "Band deletion failed",
+      "props": {
+        "name": "A band must have a name",
+        "formationYear": {
+          "invalid": "formationYear (${value}) must be an integer!",
+          "min": "formationYear must be after 1900",
+          "max": "formationYear must be before ${value}"
+        }
+      }
+    },
+    "success": {
+      "delete": "Band deleted properly"
+    }
+  },
+  "song": {
+    "errors": {
+      "duration": "duration must be a positive integer",
+      "rating": "rating must be an integer between 0 and 10 or a valid min-max range (with min and max between 0 and 10)",
+      "notFound": "No song found with the given filters",
+      "validation": "Submitted song validation failed",
+      "updateAlbum": "Could not update the related album",
+      "delete": "Song deletion failed",
+      "props": {
+        "title": "A song must have a title",
+        "position": {
+          "required": "A song must have a position in the album",
+          "invalid": "position must be a positive integer, ${val} is not valid",
+          "taken": "Another song was previously recorded with the same position"
+        },
+        "duration": "duration must be in mm:ss format, ${val} is not valid",
+        "myRating": "myRating must be an integer from 0 to 10"
+      }
+    },
+    "success": {
+      "delete": "Song deleted properly"
+    }
+  },
+  "json": {
+    "errors": {
+      "invalidFields": "Invalid fields found in JSON",
+      "filters": {
+        "invalidDateValues": "Invalid date values",
+        "invalidEnumValues": "Invalid enum values",
+        "invalidFilters": "Invalid filters found on URL",
+        "invalidNumericValues": "Invalid numeric values",
+        "invalidRangeValues": "Invalid range values",
+        "pagination": {
+          "limit": "limit value must be a positive integer under ${apiLimit}: ${limit} is not valid",
+          "skip": "skip value must be a positive integer: ${skip} is not valid",
+          "invalidValues": "Invalid values for pagination parameters found on URL"
+        },
+        "sort": "Invalid sort fields found on URL"
+      },
+      "validation": {
+        "failed": "Submitted JSON validation failed",
+        "keyNotFound": "Submitted JSON must contain an _id or a code key",
+        "bothKeys": "Submitted JSON must contain an _id or a code key, but not both of them",
+        "idMismatch": "_id provided in the submitted JSON (${jsonId}) and _id found in URL (${urlKey}) must match",
+        "codeMismatch": "code provided in the submitted JSON (${jsonCode}) and code found in URL (${urlKey}) must match",
+        "invalidId": "Provided _id is invalid: ${invalidId}",
+        "mandatoryKey": "Submitted JSON must contain a ${mandatoryKey} key",
+        "mandatoryKeyMismatch": "${modelName} recorded with the provided ${keyName} (${keyValue}) has not been recorded with this ${mandatoryKey}",
+        "modelNotFound": "No ${modelName} recorded with the provided ${keyName}: ${keyValue}",
+        "relatedModelNotFound": "No ${relatedModelName} recorded with the provided _id or code: ${key}",
+        "relatedModelMismatch": "${relatedModelName} found with the provided key ${key} and related ${relatedModelNameLowerCase} are mismatching"
+      }
+    }
+  }
+}

@@ -5,6 +5,7 @@ const request = require('supertest')
 const slugify = require('./helpers/slugify')
 const app = require('../app')
 const Band = require('./models/Band')
+const t = require('./helpers/translate')
 
 let postedBandId,
   postedBandCode,
@@ -105,12 +106,24 @@ describe('POST /bands', () => {
       .post('/api/bands')
       .send(postPayloads.invalidNameless)
     expect(res.statusCode).toEqual(400)
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.band.errors.validation
+    )
+    expect(res.body.messages).toEqual([
+      app.locals.translations.en.band.errors.props.name,
+    ])
   })
   test('throw error 400 on empty band name', async () => {
     const res = await request(app)
       .post('/api/bands')
       .send(postPayloads.invalidEmptyName)
     expect(res.statusCode).toEqual(400)
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.band.errors.validation
+    )
+    expect(res.body.messages).toEqual([
+      app.locals.translations.en.band.errors.props.name,
+    ])
   })
   // TODO: run this test right after 'create a band with minimal information'
   test('throw error 400 on duplicate band name', async () => {
@@ -118,18 +131,36 @@ describe('POST /bands', () => {
       .post('/api/bands')
       .send(postPayloads.validMinimalBand)
     expect(res.statusCode).toEqual(400)
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.band.errors.creationSameName
+    )
+    expect(res.body.band).toMatchObject(postPayloads.validMinimalBand)
   })
   test('throw error 400 on invalid formationYear', async () => {
     const res = await request(app)
       .post('/api/bands')
       .send(postPayloads.invalidFormationYear)
     expect(res.statusCode).toEqual(400)
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.band.errors.validation
+    )
+    expect(res.body.messages).toEqual([
+      t(app.locals.translations.en, 'band.errors.props.formationYear.invalid', {
+        value: postPayloads.invalidFormationYear.formationYear,
+      }),
+    ])
   })
   test('throw error 400 on formationYear before 1900', async () => {
     const res = await request(app)
       .post('/api/bands')
       .send(postPayloads.invalidMinFormationYear)
     expect(res.statusCode).toEqual(400)
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.band.errors.validation
+    )
+    expect(res.body.messages).toEqual([
+      t(app.locals.translations.en, 'band.errors.props.formationYear.min'),
+    ])
   })
   test(
     'throw error 400 on formationYear after ' + new Date().getFullYear(),
@@ -138,6 +169,14 @@ describe('POST /bands', () => {
         .post('/api/bands')
         .send(postPayloads.invalidMaxFormationYear)
       expect(res.statusCode).toEqual(400)
+      expect(res.body.error).toEqual(
+        app.locals.translations.en.band.errors.validation
+      )
+      expect(res.body.messages).toEqual([
+        t(app.locals.translations.en, 'band.errors.props.formationYear.max', {
+          value: new Date().getFullYear(),
+        }),
+      ])
     }
   )
   test('throw error 400 on unknown posted fields', async () => {
@@ -145,6 +184,9 @@ describe('POST /bands', () => {
       .post('/api/bands')
       .send(postPayloads.invalidUnknownField)
     expect(res.statusCode).toEqual(400)
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.json.errors.invalidFields
+    )
     expect(res.body.invalidFields).toEqual(['dummy'])
   })
 
@@ -327,18 +369,30 @@ describe('GET /bands', () => {
     )
     expect(res.statusCode).toEqual(404)
     expect(res.body).toHaveProperty('error')
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.band.errors.notFound
+    )
     res = await request(app).get('/api/bands/dummy')
     expect(res.statusCode).toEqual(404)
     expect(res.body).toHaveProperty('error')
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.band.errors.notFound
+    )
     res = await request(app).get('/api/bands?name=dummy')
     expect(res.statusCode).toEqual(404)
     expect(res.body).toHaveProperty('error')
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.band.errors.notFound
+    )
   })
   test.each(['dummy', '', ' '])(
     'throw error 400 on invalid formationYear',
     async (value) => {
       let res = await request(app).get('/api/bands?formationYear=' + value)
       expect(res.statusCode).toEqual(400)
+      expect(res.body.error).toEqual(
+        app.locals.translations.en.json.errors.filters.invalidNumericValues
+      )
       expect(res.body).toHaveProperty('invalidNumericFilters', {
         formationYear: value.trim(),
       })
@@ -348,14 +402,46 @@ describe('GET /bands', () => {
     const res = await request(app).get('/api/bands?dummy=value')
     expect(res.statusCode).toEqual(400)
     expect(res.body).toHaveProperty('invalidFilters', ['dummy'])
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.json.errors.filters.invalidFilters
+    )
   })
   test('throw error 400 on invalid limit and skip parameters', async () => {
     let res = await request(app).get('/api/bands?tags=french-touch&limit=-1')
     expect(res.statusCode).toEqual(400)
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.json.errors.filters.pagination.invalidValues
+    )
+    expect(res.body.messages).toEqual([
+      t(app.locals.translations.en, 'json.errors.filters.pagination.limit', {
+        apiLimit: process.env.MONGODB_LIMIT_RESULTS,
+        limit: -1,
+      }),
+    ])
     res = await request(app).get('/api/bands?tags=french-touch&skip=1.5')
     expect(res.statusCode).toEqual(400)
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.json.errors.filters.pagination.invalidValues
+    )
+    expect(res.body.messages).toEqual([
+      t(app.locals.translations.en, 'json.errors.filters.pagination.skip', {
+        skip: 1.5,
+      }),
+    ])
     res = await request(app).get('/api/bands?tags=french-touch&limit=a&skip=b')
     expect(res.statusCode).toEqual(400)
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.json.errors.filters.pagination.invalidValues
+    )
+    expect(res.body.messages).toEqual([
+      t(app.locals.translations.en, 'json.errors.filters.pagination.limit', {
+        apiLimit: process.env.MONGODB_LIMIT_RESULTS,
+        limit: 'a',
+      }),
+      t(app.locals.translations.en, 'json.errors.filters.pagination.skip', {
+        skip: 'b',
+      }),
+    ])
   })
   test('throw error 400 on limit parameter too high', async () => {
     const res = await request(app).get(
@@ -363,12 +449,24 @@ describe('GET /bands', () => {
         (parseInt(process.env.MONGODB_LIMIT_RESULTS) + 1)
     )
     expect(res.statusCode).toEqual(400)
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.json.errors.filters.pagination.invalidValues
+    )
+    expect(res.body.messages).toEqual([
+      t(app.locals.translations.en, 'json.errors.filters.pagination.limit', {
+        apiLimit: process.env.MONGODB_LIMIT_RESULTS,
+        limit: parseInt(process.env.MONGODB_LIMIT_RESULTS) + 1,
+      }),
+    ])
   })
   test('throw error 400 on invalid sort parameters', async () => {
     const res = await request(app).get(
       '/api/bands?tags=french-touch&sort=dummy'
     )
     expect(res.statusCode).toEqual(400)
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.json.errors.filters.sort
+    )
     expect(res.body).toHaveProperty('invalidSortables', ['dummy'])
   })
 
@@ -576,12 +674,24 @@ describe('PATCH /bands', () => {
       .patch('/api/bands/' + postedBandId)
       .send(patchPayloads.invalidMissingId)
     expect(res.statusCode).toEqual(400)
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.json.errors.validation.failed
+    )
+    expect(res.body.messages).toEqual([
+      app.locals.translations.en.json.errors.validation.keyNotFound,
+    ])
   })
   test('throw error 400 on missing code', async () => {
     const res = await request(app)
       .patch('/api/bands/' + postedBandCode)
       .send(patchPayloads.invalidMissingCode)
     expect(res.statusCode).toEqual(400)
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.json.errors.validation.failed
+    )
+    expect(res.body.messages).toEqual([
+      app.locals.translations.en.json.errors.validation.keyNotFound,
+    ])
   })
   test('throw error 400 when JSON contains both id and code', async () => {
     patchPayloads.invalidBothIdAndCode._id = postedBandId
@@ -590,18 +700,46 @@ describe('PATCH /bands', () => {
       .patch('/api/bands/' + postedBandId)
       .send(patchPayloads.invalidBothIdAndCode)
     expect(res.statusCode).toEqual(400)
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.json.errors.validation.failed
+    )
+    expect(res.body.messages).toEqual([
+      app.locals.translations.en.json.errors.validation.bothKeys,
+      t(app.locals.translations.en, 'json.errors.validation.codeMismatch', {
+        jsonCode: patchPayloads.invalidBothIdAndCode.code,
+        urlKey: postedBandId,
+      }),
+    ])
   })
   test('throw error 400 on mismatching id', async () => {
     const res = await request(app)
       .patch('/api/bands/' + postedBandId)
       .send(patchPayloads.invalidMismatchingId)
     expect(res.statusCode).toEqual(400)
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.json.errors.validation.failed
+    )
+    expect(res.body.messages).toEqual([
+      t(app.locals.translations.en, 'json.errors.validation.idMismatch', {
+        jsonId: patchPayloads.invalidMismatchingId._id,
+        urlKey: postedBandId,
+      }),
+    ])
   })
   test('throw error 400 on mismatching code', async () => {
     const res = await request(app)
       .patch('/api/bands/' + postedBandCode)
       .send(patchPayloads.invalidMismatchingCode)
     expect(res.statusCode).toEqual(400)
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.json.errors.validation.failed
+    )
+    expect(res.body.messages).toEqual([
+      t(app.locals.translations.en, 'json.errors.validation.codeMismatch', {
+        jsonCode: patchPayloads.invalidMismatchingCode.code,
+        urlKey: postedBandCode,
+      }),
+    ])
   })
   test('throw error 400 on empty name', async () => {
     patchPayloads.invalidEmptyName._id = postedBandId
@@ -609,6 +747,12 @@ describe('PATCH /bands', () => {
       .patch('/api/bands/' + postedBandId)
       .send(patchPayloads.invalidEmptyName)
     expect(res.statusCode).toEqual(400)
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.band.errors.validation
+    )
+    expect(res.body.messages).toEqual([
+      app.locals.translations.en.band.errors.props.name,
+    ])
   })
   test('throw error 400 on invalid formationYear', async () => {
     patchPayloads.invalidFormationYear._id = postedBandId
@@ -616,6 +760,14 @@ describe('PATCH /bands', () => {
       .patch('/api/bands/' + postedBandId)
       .send(patchPayloads.invalidFormationYear)
     expect(res.statusCode).toEqual(400)
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.band.errors.validation
+    )
+    expect(res.body.messages).toEqual([
+      t(app.locals.translations.en, 'band.errors.props.formationYear.invalid', {
+        value: patchPayloads.invalidFormationYear.formationYear,
+      }),
+    ])
   })
   test('throw error 400 on formationYear before 1900', async () => {
     patchPayloads.invalidMinFormationYear._id = postedBandId
@@ -623,6 +775,12 @@ describe('PATCH /bands', () => {
       .patch('/api/bands/' + postedBandId)
       .send(patchPayloads.invalidMinFormationYear)
     expect(res.statusCode).toEqual(400)
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.band.errors.validation
+    )
+    expect(res.body.messages).toEqual([
+      app.locals.translations.en.band.errors.props.formationYear.min,
+    ])
   })
   test(
     'throw error 400 on formationYear after ' + new Date().getFullYear(),
@@ -632,6 +790,14 @@ describe('PATCH /bands', () => {
         .patch('/api/bands/' + postedBandId)
         .send(patchPayloads.invalidMaxFormationYear)
       expect(res.statusCode).toEqual(400)
+      expect(res.body.error).toEqual(
+        app.locals.translations.en.band.errors.validation
+      )
+      expect(res.body.messages).toEqual([
+        t(app.locals.translations.en, 'band.errors.props.formationYear.max', {
+          value: new Date().getFullYear(),
+        }),
+      ])
     }
   )
   test('throw error 400 on unknown posted fields', async () => {
@@ -640,6 +806,9 @@ describe('PATCH /bands', () => {
       .patch('/api/bands/' + postedBandId)
       .send(patchPayloads.invalidUnknownField)
     expect(res.statusCode).toEqual(400)
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.json.errors.invalidFields
+    )
     expect(res.body.invalidFields).toEqual(['dummy'])
   })
   test('throw error 400 on invalid id', async () => {
@@ -648,6 +817,14 @@ describe('PATCH /bands', () => {
       .patch('/api/bands/' + patchPayloads.invalidBadId._id)
       .send(patchPayloads.invalidBadId)
     expect(res.statusCode).toEqual(400)
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.json.errors.validation.failed
+    )
+    expect(res.body.messages).toEqual([
+      t(app.locals.translations.en, 'json.errors.validation.invalidId', {
+        invalidId: patchPayloads.invalidBadId._id,
+      }),
+    ])
   })
   test('throw error 404 on unknown id', async () => {
     patchPayloads.invalidUnknownId._id =
@@ -656,6 +833,13 @@ describe('PATCH /bands', () => {
       .patch('/api/bands/' + patchPayloads.invalidUnknownId._id)
       .send(patchPayloads.invalidUnknownId)
     expect(res.statusCode).toEqual(404)
+    expect(res.body.error).toEqual(
+      t(app.locals.translations.en, 'json.errors.validation.modelNotFound', {
+        modelName: 'band',
+        keyName: '_id',
+        keyValue: patchPayloads.invalidUnknownId._id,
+      })
+    )
   })
   test('throw error 404 on unknown code', async () => {
     patchPayloads.invalidUnknownCode.code =
@@ -664,6 +848,13 @@ describe('PATCH /bands', () => {
       .patch('/api/bands/' + patchPayloads.invalidUnknownCode.code)
       .send(patchPayloads.invalidUnknownCode)
     expect(res.statusCode).toEqual(404)
+    expect(res.body.error).toEqual(
+      t(app.locals.translations.en, 'json.errors.validation.modelNotFound', {
+        modelName: 'band',
+        keyName: 'code',
+        keyValue: patchPayloads.invalidUnknownCode.code,
+      })
+    )
   })
 
   afterAll(async () => {
@@ -763,6 +954,9 @@ describe('DELETE /bands', () => {
       .delete('/api/bands/' + postedBandId)
       .send(deletePayloads.validBandToDeleteWithId)
     expect(res.statusCode).toEqual(200)
+    expect(res.body.success).toEqual(
+      app.locals.translations.en.band.success.delete
+    )
   })
   test('delete a band with code', async () => {
     deletePayloads.validBandToDeleteWithCode.code = postedBandCode
@@ -770,6 +964,9 @@ describe('DELETE /bands', () => {
       .delete('/api/bands/' + postedBandCode)
       .send(deletePayloads.validBandToDeleteWithCode)
     expect(res.statusCode).toEqual(200)
+    expect(res.body.success).toEqual(
+      app.locals.translations.en.band.success.delete
+    )
   })
   test('force delete a band linked to an album', async () => {
     let res = await request(app)
@@ -781,20 +978,38 @@ describe('DELETE /bands', () => {
       .delete('/api/bands/' + postedBandId)
       .send(deletePayloads.validBandToForceDelete)
     expect(res.statusCode).toEqual(200)
+    expect(res.body.success).toEqual(
+      app.locals.translations.en.band.success.delete
+    )
     res = await request(app).get(`/api/albums?title=surrender`)
     expect(res.statusCode).toEqual(404)
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.album.errors.notFound
+    )
   })
   test('throw error 400 on missing id', async () => {
     const res = await request(app)
       .delete('/api/bands/' + postedBandId)
       .send(deletePayloads.invalidMissingId)
     expect(res.statusCode).toEqual(400)
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.json.errors.validation.failed
+    )
+    expect(res.body.messages).toEqual([
+      app.locals.translations.en.json.errors.validation.keyNotFound,
+    ])
   })
   test('throw error 400 on missing code', async () => {
     const res = await request(app)
       .delete('/api/bands/' + postedBandCode)
       .send(deletePayloads.invalidMissingCode)
     expect(res.statusCode).toEqual(400)
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.json.errors.validation.failed
+    )
+    expect(res.body.messages).toEqual([
+      app.locals.translations.en.json.errors.validation.keyNotFound,
+    ])
   })
   test('throw error 400 when JSON contains both id and code', async () => {
     deletePayloads.invalidBothIdAndCode._id = postedBandId
@@ -803,6 +1018,16 @@ describe('DELETE /bands', () => {
       .delete('/api/bands/' + postedBandId)
       .send(deletePayloads.invalidBothIdAndCode)
     expect(res.statusCode).toEqual(400)
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.json.errors.validation.failed
+    )
+    expect(res.body.messages).toEqual([
+      app.locals.translations.en.json.errors.validation.bothKeys,
+      t(app.locals.translations.en, 'json.errors.validation.codeMismatch', {
+        jsonCode: deletePayloads.invalidBothIdAndCode.code,
+        urlKey: postedBandId,
+      }),
+    ])
   })
   test('throw error 400 on missing name', async () => {
     deletePayloads.invalidMissingName._id = postedBandId
@@ -810,18 +1035,44 @@ describe('DELETE /bands', () => {
       .delete('/api/bands/' + postedBandId)
       .send(deletePayloads.invalidMissingName)
     expect(res.statusCode).toEqual(400)
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.json.errors.validation.failed
+    )
+    expect(res.body.messages).toEqual([
+      t(app.locals.translations.en, 'json.errors.validation.mandatoryKey', {
+        mandatoryKey: 'name',
+      }),
+    ])
   })
   test('throw error 400 on mismatching id', async () => {
     const res = await request(app)
       .delete('/api/bands/' + postedBandId)
       .send(deletePayloads.invalidMismatchingId)
     expect(res.statusCode).toEqual(400)
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.json.errors.validation.failed
+    )
+    expect(res.body.messages).toEqual([
+      t(app.locals.translations.en, 'json.errors.validation.idMismatch', {
+        jsonId: deletePayloads.invalidMismatchingId._id,
+        urlKey: postedBandId,
+      }),
+    ])
   })
   test('throw error 400 on mismatching code', async () => {
     const res = await request(app)
       .delete('/api/bands/' + postedBandCode)
       .send(deletePayloads.invalidMismatchingCode)
     expect(res.statusCode).toEqual(400)
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.json.errors.validation.failed
+    )
+    expect(res.body.messages).toEqual([
+      t(app.locals.translations.en, 'json.errors.validation.codeMismatch', {
+        jsonCode: deletePayloads.invalidMismatchingCode.code,
+        urlKey: postedBandCode,
+      }),
+    ])
   })
   test('throw error 400 on mismatching name', async () => {
     deletePayloads.invalidMismatchingName._id = postedBandId
@@ -829,6 +1080,18 @@ describe('DELETE /bands', () => {
       .delete('/api/bands/' + postedBandId)
       .send(deletePayloads.invalidMismatchingName)
     expect(res.statusCode).toEqual(400)
+    expect(res.body.error).toEqual(
+      t(
+        app.locals.translations.en,
+        'json.errors.validation.mandatoryKeyMismatch',
+        {
+          modelName: 'Band',
+          keyName: '_id',
+          keyValue: deletePayloads.invalidMismatchingName._id,
+          mandatoryKey: 'name',
+        }
+      )
+    )
   })
   test('throw error 400 on invalid id', async () => {
     deletePayloads.invalidBadId._id = postedBandId.slice(1)
@@ -836,6 +1099,14 @@ describe('DELETE /bands', () => {
       .delete('/api/bands/' + deletePayloads.invalidBadId._id)
       .send(deletePayloads.invalidBadId)
     expect(res.statusCode).toEqual(400)
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.json.errors.validation.failed
+    )
+    expect(res.body.messages).toEqual([
+      t(app.locals.translations.en, 'json.errors.validation.invalidId', {
+        invalidId: deletePayloads.invalidBadId._id,
+      }),
+    ])
   })
   test('throw error 404 on unknown id', async () => {
     deletePayloads.invalidUnknownId._id =
@@ -844,6 +1115,13 @@ describe('DELETE /bands', () => {
       .delete('/api/bands/' + deletePayloads.invalidUnknownId._id)
       .send(deletePayloads.invalidUnknownId)
     expect(res.statusCode).toEqual(404)
+    expect(res.body.error).toEqual(
+      t(app.locals.translations.en, 'json.errors.validation.modelNotFound', {
+        modelName: 'band',
+        keyName: '_id',
+        keyValue: deletePayloads.invalidUnknownId._id,
+      })
+    )
   })
   test('throw error 404 on unknown code', async () => {
     deletePayloads.invalidUnknownCode.code =
@@ -852,6 +1130,13 @@ describe('DELETE /bands', () => {
       .delete('/api/bands/' + deletePayloads.invalidUnknownCode.code)
       .send(deletePayloads.invalidUnknownCode)
     expect(res.statusCode).toEqual(404)
+    expect(res.body.error).toEqual(
+      t(app.locals.translations.en, 'json.errors.validation.modelNotFound', {
+        modelName: 'band',
+        keyName: 'code',
+        keyValue: deletePayloads.invalidUnknownCode.code,
+      })
+    )
   })
   test('throw error 409 when deleting a band linked to an album', async () => {
     let res = await request(app)
@@ -864,6 +1149,12 @@ describe('DELETE /bands', () => {
       .send(deletePayloads.validBandToDeleteWithId)
     expect(res.statusCode).toEqual(409)
     expect(res.body.linkedAlbums).toMatchObject([deletePayloads.linkedAlbum])
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.band.errors.cascadeDelete
+    )
+    expect(res.body.message).toEqual(
+      app.locals.translations.en.band.errors.cascadeDeleteHint
+    )
   })
 })
 

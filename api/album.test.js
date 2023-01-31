@@ -5,6 +5,7 @@ const request = require('supertest')
 const app = require('../app')
 const { Album } = require('./models/Album')
 const Band = require('./models/Band')
+const t = require('./helpers/translate')
 
 let postedBandId,
   postedBandCode,
@@ -206,30 +207,59 @@ describe('POST /albums', () => {
       .post(`/api/bands/${postedBandId}/albums`)
       .send(postPayloads.invalidNoTitle)
     expect(res.statusCode).toEqual(400)
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.album.errors.validation
+    )
+    expect(res.body.messages).toEqual([
+      app.locals.translations.en.album.errors.props.title,
+    ])
   })
   test('throw error 400 on empty album title', async () => {
     const res = await request(app)
       .post(`/api/bands/${postedBandId}/albums`)
       .send(postPayloads.invalidEmptyTitle)
     expect(res.statusCode).toEqual(400)
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.album.errors.validation
+    )
+    expect(res.body.messages).toEqual([
+      app.locals.translations.en.album.errors.props.title,
+    ])
   })
   test('throw error 400 on releaseDate before 1900', async () => {
     const res = await request(app)
       .post(`/api/bands/${postedBandId}/albums`)
       .send(postPayloads.invalidMinReleaseDate)
     expect(res.statusCode).toEqual(400)
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.album.errors.validation
+    )
+    expect(res.body.messages).toEqual([
+      app.locals.translations.en.album.errors.props.releaseDate.min,
+    ])
   })
   test('throw error 400 on invalid releaseDate', async () => {
     const res = await request(app)
       .post(`/api/bands/${postedBandId}/albums`)
       .send(postPayloads.invalidReleaseDate)
     expect(res.statusCode).toEqual(400)
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.album.errors.validation
+    )
+    expect(res.body.messages).toEqual([
+      t(app.locals.translations.en, 'album.errors.props.releaseDate.invalid', {
+        date: null,
+      }),
+    ])
   })
   test('throw error 400 on invalid type', async () => {
     const res = await request(app)
       .post(`/api/bands/${postedBandId}/albums`)
       .send(postPayloads.invalidType)
     expect(res.statusCode).toEqual(400)
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.album.errors.validation
+    )
   })
   test('throw error 404 on unknown band id', async () => {
     const res = await request(app)
@@ -238,6 +268,9 @@ describe('POST /albums', () => {
       )
       .send(postPayloads.invalidUnknownBandId)
     expect(res.statusCode).toEqual(404)
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.band.errors.notFound
+    )
   })
   test('throw error 404 on unknown band code', async () => {
     const res = await request(app)
@@ -248,6 +281,9 @@ describe('POST /albums', () => {
       )
       .send(postPayloads.invalidUnknownBandCode)
     expect(res.statusCode).toEqual(404)
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.band.errors.notFound
+    )
   })
   test('throw error 400 on unknown posted fields', async () => {
     const res = await request(app)
@@ -255,6 +291,9 @@ describe('POST /albums', () => {
       .send(postPayloads.invalidUnknownField)
     expect(res.statusCode).toEqual(400)
     expect(res.body.invalidFields).toEqual(['dummy'])
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.json.errors.invalidFields
+    )
   })
 
   afterAll(async () => {
@@ -661,6 +700,9 @@ describe('GET /albums', () => {
   test('throw error 400 on invalid releaseYear', async () => {
     const res = await request(app).get('/api/albums?releaseYear=dummy')
     expect(res.statusCode).toEqual(400)
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.album.errors.props.releaseYear
+    )
   })
   test.each([
     'dummy',
@@ -673,6 +715,9 @@ describe('GET /albums', () => {
     const res = await request(app).get('/api/albums?releaseDate=' + date)
     expect(res.statusCode).toEqual(400)
     expect(res.body).toHaveProperty('invalidDateFilters')
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.json.errors.filters.invalidDateValues
+    )
   })
   test('throw error 400 on invalid type', async () => {
     const res = await request(app).get('/api/albums?type=dummy')
@@ -684,19 +729,54 @@ describe('GET /albums', () => {
         expectedEnumValues: Album.getEnumFilters()['type'],
       },
     ])
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.json.errors.filters.invalidEnumValues
+    )
   })
   test('throw error 400 on invalid filters', async () => {
     const res = await request(app).get('/api/albums?dummy=value')
     expect(res.statusCode).toEqual(400)
     expect(res.body).toHaveProperty('invalidFilters', ['dummy'])
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.json.errors.filters.invalidFilters
+    )
   })
   test('throw error 400 on invalid limit and skip parameters', async () => {
     let res = await request(app).get('/api/albums?tags=house&limit=-1')
     expect(res.statusCode).toEqual(400)
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.json.errors.filters.pagination.invalidValues
+    )
+    expect(res.body.messages).toEqual([
+      t(app.locals.translations.en, 'json.errors.filters.pagination.limit', {
+        apiLimit: process.env.MONGODB_LIMIT_RESULTS,
+        limit: -1,
+      }),
+    ])
     res = await request(app).get('/api/albums?tags=house&skip=1.5')
     expect(res.statusCode).toEqual(400)
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.json.errors.filters.pagination.invalidValues
+    )
+    expect(res.body.messages).toEqual([
+      t(app.locals.translations.en, 'json.errors.filters.pagination.skip', {
+        skip: 1.5,
+      }),
+    ])
     res = await request(app).get('/api/albums?tags=house&limit=a&skip=b')
     expect(res.statusCode).toEqual(400)
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.json.errors.filters.pagination.invalidValues
+    )
+    expect(res.body.messages).toEqual([
+      t(app.locals.translations.en, 'json.errors.filters.pagination.limit', {
+        apiLimit: process.env.MONGODB_LIMIT_RESULTS,
+        limit: 'a',
+      }),
+      t(app.locals.translations.en, 'json.errors.filters.pagination.skip', {
+        skip: 'b',
+      }),
+    ])
   })
   test('throw error 400 on limit parameter too high', async () => {
     const res = await request(app).get(
@@ -704,11 +784,23 @@ describe('GET /albums', () => {
         (parseInt(process.env.MONGODB_LIMIT_RESULTS) + 1)
     )
     expect(res.statusCode).toEqual(400)
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.json.errors.filters.pagination.invalidValues
+    )
+    expect(res.body.messages).toEqual([
+      t(app.locals.translations.en, 'json.errors.filters.pagination.limit', {
+        apiLimit: process.env.MONGODB_LIMIT_RESULTS,
+        limit: parseInt(process.env.MONGODB_LIMIT_RESULTS) + 1,
+      }),
+    ])
   })
   test('throw error 400 on invalid sort parameters', async () => {
     const res = await request(app).get('/api/albums?tags=house&sort=dummy')
     expect(res.statusCode).toEqual(400)
     expect(res.body).toHaveProperty('invalidSortables', ['dummy'])
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.json.errors.filters.sort
+    )
   })
   test('throw error 404 on album not found', async () => {
     let res = await request(app).get(
@@ -716,12 +808,21 @@ describe('GET /albums', () => {
     )
     expect(res.statusCode).toEqual(404)
     expect(res.body).toHaveProperty('error')
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.album.errors.notFound
+    )
     res = await request(app).get('/api/albums/dummy')
     expect(res.statusCode).toEqual(404)
     expect(res.body).toHaveProperty('error')
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.album.errors.notFound
+    )
     res = await request(app).get('/api/albums?title=dummy')
     expect(res.statusCode).toEqual(404)
     expect(res.body).toHaveProperty('error')
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.album.errors.notFound
+    )
   })
   test('throw error 404 on mismatching related band (id)', async () => {
     const res = await request(app).get(
@@ -729,6 +830,9 @@ describe('GET /albums', () => {
     )
     expect(res.statusCode).toEqual(404)
     expect(res.body).toHaveProperty('error')
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.album.errors.notFound
+    )
   })
   test('throw error 404 on mismatching related band (code)', async () => {
     const res = await request(app).get(
@@ -736,6 +840,9 @@ describe('GET /albums', () => {
     )
     expect(res.statusCode).toEqual(404)
     expect(res.body).toHaveProperty('error')
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.album.errors.notFound
+    )
   })
   test('throw error 404 on unknown related band (id)', async () => {
     const res = await request(app).get(
@@ -745,6 +852,16 @@ describe('GET /albums', () => {
     )
     expect(res.statusCode).toEqual(404)
     expect(res.body).toHaveProperty('error')
+    expect(res.body.error).toEqual(
+      t(
+        app.locals.translations.en,
+        'json.errors.validation.relatedModelNotFound',
+        {
+          relatedModelName: 'band',
+          key: postedBandId.slice(1) + postedBandId.charAt(0),
+        }
+      )
+    )
   })
   test('throw error 404 on unknown related band (code)', async () => {
     const res = await request(app).get(
@@ -752,6 +869,16 @@ describe('GET /albums', () => {
     )
     expect(res.statusCode).toEqual(404)
     expect(res.body).toHaveProperty('error')
+    expect(res.body.error).toEqual(
+      t(
+        app.locals.translations.en,
+        'json.errors.validation.relatedModelNotFound',
+        {
+          relatedModelName: 'band',
+          key: postedBandCode.slice(1),
+        }
+      )
+    )
   })
 
   afterAll(async () => {
@@ -1020,12 +1147,24 @@ describe('PATCH /albums', () => {
       .patch('/api/albums/' + postedAlbumId)
       .send(patchPayloads.invalidMissingId)
     expect(res.statusCode).toEqual(400)
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.json.errors.validation.failed
+    )
+    expect(res.body.messages).toEqual([
+      app.locals.translations.en.json.errors.validation.keyNotFound,
+    ])
   })
   test('throw error 400 on missing code', async () => {
     const res = await request(app)
       .patch('/api/albums/' + postedAlbumCode)
       .send(patchPayloads.invalidMissingCode)
     expect(res.statusCode).toEqual(400)
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.json.errors.validation.failed
+    )
+    expect(res.body.messages).toEqual([
+      app.locals.translations.en.json.errors.validation.keyNotFound,
+    ])
   })
   test('throw error 400 when JSON contains both id and code', async () => {
     patchPayloads.invalidBothIdAndCode._id = postedAlbumId
@@ -1034,18 +1173,46 @@ describe('PATCH /albums', () => {
       .patch('/api/albums/' + postedAlbumId)
       .send(patchPayloads.invalidBothIdAndCode)
     expect(res.statusCode).toEqual(400)
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.json.errors.validation.failed
+    )
+    expect(res.body.messages).toEqual([
+      app.locals.translations.en.json.errors.validation.bothKeys,
+      t(app.locals.translations.en, 'json.errors.validation.codeMismatch', {
+        jsonCode: patchPayloads.invalidBothIdAndCode.code,
+        urlKey: postedAlbumId,
+      }),
+    ])
   })
   test('throw error 400 on mismatching id', async () => {
     const res = await request(app)
       .patch('/api/albums/' + postedAlbumId)
       .send(patchPayloads.invalidMismatchingId)
     expect(res.statusCode).toEqual(400)
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.json.errors.validation.failed
+    )
+    expect(res.body.messages).toEqual([
+      t(app.locals.translations.en, 'json.errors.validation.idMismatch', {
+        jsonId: patchPayloads.invalidMismatchingId._id,
+        urlKey: postedAlbumId,
+      }),
+    ])
   })
   test('throw error 400 on mismatching code', async () => {
     const res = await request(app)
       .patch('/api/albums/' + postedAlbumCode)
       .send(patchPayloads.invalidMismatchingCode)
     expect(res.statusCode).toEqual(400)
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.json.errors.validation.failed
+    )
+    expect(res.body.messages).toEqual([
+      t(app.locals.translations.en, 'json.errors.validation.codeMismatch', {
+        jsonCode: patchPayloads.invalidMismatchingCode.code,
+        urlKey: postedAlbumCode,
+      }),
+    ])
   })
   test('throw error 400 on empty title', async () => {
     patchPayloads.invalidEmptyTitle._id = postedAlbumId
@@ -1060,6 +1227,14 @@ describe('PATCH /albums', () => {
       .patch('/api/albums/' + postedAlbumId)
       .send(patchPayloads.invalidReleaseDate)
     expect(res.statusCode).toEqual(400)
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.album.errors.validation
+    )
+    expect(res.body.messages).toEqual([
+      t(app.locals.translations.en, 'album.errors.props.releaseDate.invalid', {
+        date: null,
+      }),
+    ])
   })
   test('throw error 400 on releaseDate before 1900', async () => {
     patchPayloads.invalidMinReleaseDate._id = postedAlbumId
@@ -1067,6 +1242,12 @@ describe('PATCH /albums', () => {
       .patch('/api/albums/' + postedAlbumId)
       .send(patchPayloads.invalidMinReleaseDate)
     expect(res.statusCode).toEqual(400)
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.album.errors.validation
+    )
+    expect(res.body.messages).toEqual([
+      app.locals.translations.en.album.errors.props.releaseDate.min,
+    ])
   })
   test('throw error 400 on invalid type', async () => {
     patchPayloads.invalidType._id = postedAlbumId
@@ -1074,6 +1255,9 @@ describe('PATCH /albums', () => {
       .patch('/api/albums/' + postedAlbumId)
       .send(patchPayloads.invalidType)
     expect(res.statusCode).toEqual(400)
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.album.errors.validation
+    )
   })
   test('throw error 400 on unknown posted fields', async () => {
     patchPayloads.invalidUnknownField._id = postedAlbumId
@@ -1082,6 +1266,9 @@ describe('PATCH /albums', () => {
       .send(patchPayloads.invalidUnknownField)
     expect(res.statusCode).toEqual(400)
     expect(res.body.invalidFields).toEqual(['dummy'])
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.json.errors.invalidFields
+    )
   })
   test('throw error 400 on invalid id', async () => {
     patchPayloads.invalidBadId._id = postedAlbumId.slice(1)
@@ -1089,6 +1276,14 @@ describe('PATCH /albums', () => {
       .patch('/api/albums/' + patchPayloads.invalidBadId._id)
       .send(patchPayloads.invalidBadId)
     expect(res.statusCode).toEqual(400)
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.json.errors.validation.failed
+    )
+    expect(res.body.messages).toEqual([
+      t(app.locals.translations.en, 'json.errors.validation.invalidId', {
+        invalidId: patchPayloads.invalidBadId._id,
+      }),
+    ])
   })
   test('throw error 404 on unknown id', async () => {
     patchPayloads.invalidUnknownId._id =
@@ -1097,6 +1292,13 @@ describe('PATCH /albums', () => {
       .patch('/api/albums/' + patchPayloads.invalidUnknownId._id)
       .send(patchPayloads.invalidUnknownId)
     expect(res.statusCode).toEqual(404)
+    expect(res.body.error).toEqual(
+      t(app.locals.translations.en, 'json.errors.validation.modelNotFound', {
+        modelName: 'album',
+        keyName: '_id',
+        keyValue: patchPayloads.invalidUnknownId._id,
+      })
+    )
   })
   test('throw error 404 on unknown code', async () => {
     patchPayloads.invalidUnknownCode.code =
@@ -1105,6 +1307,13 @@ describe('PATCH /albums', () => {
       .patch('/api/albums/' + patchPayloads.invalidUnknownCode.code)
       .send(patchPayloads.invalidUnknownCode)
     expect(res.statusCode).toEqual(404)
+    expect(res.body.error).toEqual(
+      t(app.locals.translations.en, 'json.errors.validation.modelNotFound', {
+        modelName: 'album',
+        keyName: 'code',
+        keyValue: patchPayloads.invalidUnknownCode.code,
+      })
+    )
   })
   test('throw error 404 on mismatching related band (id)', async () => {
     patchPayloads.validMinimalUpdateWithId._id = postedAlbumId
@@ -1112,6 +1321,17 @@ describe('PATCH /albums', () => {
       .patch(`/api/bands/${postedUnrelatedBandId}/albums/${postedAlbumId}`)
       .send(patchPayloads.validMinimalUpdateWithId)
     expect(res.statusCode).toEqual(404)
+    expect(res.body.error).toEqual(
+      t(
+        app.locals.translations.en,
+        'json.errors.validation.relatedModelMismatch',
+        {
+          relatedModelName: 'Band',
+          key: postedUnrelatedBandId,
+          relatedModelNameLowerCase: 'band',
+        }
+      )
+    )
   })
   test('throw error 404 on mismatching related band (code)', async () => {
     patchPayloads.validMinimalUpdateWithCode.code = postedAlbumCode
@@ -1119,6 +1339,17 @@ describe('PATCH /albums', () => {
       .patch(`/api/bands/${postedUnrelatedBandCode}/albums/${postedAlbumCode}`)
       .send(patchPayloads.validMinimalUpdateWithCode)
     expect(res.statusCode).toEqual(404)
+    expect(res.body.error).toEqual(
+      t(
+        app.locals.translations.en,
+        'json.errors.validation.relatedModelMismatch',
+        {
+          relatedModelName: 'Band',
+          key: postedUnrelatedBandCode,
+          relatedModelNameLowerCase: 'band',
+        }
+      )
+    )
   })
   test('throw error 404 on unknown related band (id)', async () => {
     patchPayloads.validMinimalUpdateWithId._id = postedAlbumId
@@ -1130,6 +1361,16 @@ describe('PATCH /albums', () => {
       )
       .send(patchPayloads.validMinimalUpdateWithId)
     expect(res.statusCode).toEqual(404)
+    expect(res.body.error).toEqual(
+      t(
+        app.locals.translations.en,
+        'json.errors.validation.relatedModelNotFound',
+        {
+          relatedModelName: 'band',
+          key: postedBandId.slice(1) + postedBandId.charAt(0),
+        }
+      )
+    )
   })
   test('throw error 404 on unknown related band (code)', async () => {
     patchPayloads.validMinimalUpdateWithCode.code = postedAlbumCode
@@ -1137,6 +1378,16 @@ describe('PATCH /albums', () => {
       .patch(`/api/bands/${postedBandCode.slice(1)}/albums/${postedAlbumCode}`)
       .send(patchPayloads.validMinimalUpdateWithCode)
     expect(res.statusCode).toEqual(404)
+    expect(res.body.error).toEqual(
+      t(
+        app.locals.translations.en,
+        'json.errors.validation.relatedModelNotFound',
+        {
+          relatedModelName: 'band',
+          key: postedBandCode.slice(1),
+        }
+      )
+    )
   })
 
   afterAll(async () => {
@@ -1273,6 +1524,9 @@ describe('DELETE /albums', () => {
       .delete(`/api/albums/${postedAlbumId}`)
       .send(deletePayloads.validAlbumToDeleteWithId)
     expect(res.statusCode).toEqual(200)
+    expect(res.body.success).toEqual(
+      app.locals.translations.en.album.success.delete
+    )
   })
   test('delete an album with code', async () => {
     deletePayloads.validAlbumToDeleteWithCode.code = postedAlbumCode
@@ -1280,6 +1534,9 @@ describe('DELETE /albums', () => {
       .delete(`/api/albums/${postedAlbumCode}`)
       .send(deletePayloads.validAlbumToDeleteWithCode)
     expect(res.statusCode).toEqual(200)
+    expect(res.body.success).toEqual(
+      app.locals.translations.en.album.success.delete
+    )
   })
   test('delete an album and returned json should not show band-albums recursion', async () => {
     deletePayloads.validAlbumToDeleteWithCode.code = postedAlbumCode
@@ -1292,6 +1549,9 @@ describe('DELETE /albums', () => {
     )
     expect(res.body.deleted.band).toHaveProperty('albums')
     expect(res.body.deleted.band.albums).not.toHaveProperty('band')
+    expect(res.body.success).toEqual(
+      app.locals.translations.en.album.success.delete
+    )
   })
   test('delete an album with id filtered by band', async () => {
     deletePayloads.validAlbumToDeleteWithId._id = postedAlbumId
@@ -1299,6 +1559,9 @@ describe('DELETE /albums', () => {
       .delete(`/api/bands/${postedBandId}/albums/${postedAlbumId}`)
       .send(deletePayloads.validAlbumToDeleteWithId)
     expect(res.statusCode).toEqual(200)
+    expect(res.body.success).toEqual(
+      app.locals.translations.en.album.success.delete
+    )
   })
   test('delete an album with code filtered by band', async () => {
     deletePayloads.validAlbumToDeleteWithCode.code = postedAlbumCode
@@ -1306,6 +1569,9 @@ describe('DELETE /albums', () => {
       .delete(`/api/bands/${postedBandCode}/albums/${postedAlbumCode}`)
       .send(deletePayloads.validAlbumToDeleteWithCode)
     expect(res.statusCode).toEqual(200)
+    expect(res.body.success).toEqual(
+      app.locals.translations.en.album.success.delete
+    )
   })
   test('delete an album and show the remaining ones from the related band', async () => {
     deletePayloads.validAlbumToDeleteWithCode.code = postedAlbumCode
@@ -1317,18 +1583,33 @@ describe('DELETE /albums', () => {
       deletePayloads.validOtherAlbums.get(1),
       deletePayloads.validOtherAlbums.get(2),
     ])
+    expect(res.body.success).toEqual(
+      app.locals.translations.en.album.success.delete
+    )
   })
   test('throw error 400 on missing id', async () => {
     const res = await request(app)
       .delete(`/api/albums/${postedBandId}`)
       .send(deletePayloads.invalidMissingId)
     expect(res.statusCode).toEqual(400)
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.json.errors.validation.failed
+    )
+    expect(res.body.messages).toEqual([
+      app.locals.translations.en.json.errors.validation.keyNotFound,
+    ])
   })
   test('throw error 400 on missing code', async () => {
     const res = await request(app)
       .delete(`/api/albums/${postedBandCode}`)
       .send(deletePayloads.invalidMissingCode)
     expect(res.statusCode).toEqual(400)
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.json.errors.validation.failed
+    )
+    expect(res.body.messages).toEqual([
+      app.locals.translations.en.json.errors.validation.keyNotFound,
+    ])
   })
   test('throw error 400 when JSON contains both id and code', async () => {
     deletePayloads.invalidBothIdAndCode._id = postedAlbumId
@@ -1337,6 +1618,19 @@ describe('DELETE /albums', () => {
       .delete(`/api/albums/${postedAlbumCode}`)
       .send(deletePayloads.invalidBothIdAndCode)
     expect(res.statusCode).toEqual(400)
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.json.errors.validation.failed
+    )
+    expect(res.body.messages).toEqual([
+      app.locals.translations.en.json.errors.validation.bothKeys,
+      t(app.locals.translations.en, 'json.errors.validation.idMismatch', {
+        jsonId: deletePayloads.invalidBothIdAndCode._id,
+        urlKey: postedAlbumCode,
+      }),
+      t(app.locals.translations.en, 'json.errors.validation.invalidId', {
+        invalidId: postedAlbumCode,
+      }),
+    ])
   })
   test('throw error 400 on missing title', async () => {
     deletePayloads.invalidMissingTitle._id = postedAlbumId
@@ -1344,18 +1638,44 @@ describe('DELETE /albums', () => {
       .delete(`/api/albums/${postedAlbumId}`)
       .send(deletePayloads.invalidMissingTitle)
     expect(res.statusCode).toEqual(400)
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.json.errors.validation.failed
+    )
+    expect(res.body.messages).toEqual([
+      t(app.locals.translations.en, 'json.errors.validation.mandatoryKey', {
+        mandatoryKey: 'title',
+      }),
+    ])
   })
   test('throw error 400 on mismatching id', async () => {
     const res = await request(app)
       .delete(`/api/albums/${postedAlbumId}`)
       .send(deletePayloads.invalidMismatchingId)
     expect(res.statusCode).toEqual(400)
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.json.errors.validation.failed
+    )
+    expect(res.body.messages).toEqual([
+      t(app.locals.translations.en, 'json.errors.validation.idMismatch', {
+        jsonId: deletePayloads.invalidMismatchingId._id,
+        urlKey: postedAlbumId,
+      }),
+    ])
   })
   test('throw error 400 on mismatching code', async () => {
     const res = await request(app)
       .delete(`/api/albums/${postedBandCode}`)
       .send(deletePayloads.invalidMismatchingCode)
     expect(res.statusCode).toEqual(400)
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.json.errors.validation.failed
+    )
+    expect(res.body.messages).toEqual([
+      t(app.locals.translations.en, 'json.errors.validation.codeMismatch', {
+        jsonCode: deletePayloads.invalidMismatchingCode.code,
+        urlKey: postedBandCode,
+      }),
+    ])
   })
   test('throw error 400 on mismatching title', async () => {
     deletePayloads.invalidMismatchingTitle._id = postedAlbumId
@@ -1363,6 +1683,18 @@ describe('DELETE /albums', () => {
       .delete(`/api/albums/${postedAlbumId}`)
       .send(deletePayloads.invalidMismatchingTitle)
     expect(res.statusCode).toEqual(400)
+    expect(res.body.error).toEqual(
+      t(
+        app.locals.translations.en,
+        'json.errors.validation.mandatoryKeyMismatch',
+        {
+          modelName: 'Album',
+          keyName: '_id',
+          keyValue: deletePayloads.invalidMismatchingTitle._id,
+          mandatoryKey: 'title',
+        }
+      )
+    )
   })
   test('throw error 400 on invalid id', async () => {
     deletePayloads.invalidBadId._id = postedAlbumId.slice(1)
@@ -1370,6 +1702,14 @@ describe('DELETE /albums', () => {
       .delete('/api/albums/' + deletePayloads.invalidBadId._id)
       .send(deletePayloads.invalidBadId)
     expect(res.statusCode).toEqual(400)
+    expect(res.body.error).toEqual(
+      app.locals.translations.en.json.errors.validation.failed
+    )
+    expect(res.body.messages).toEqual([
+      t(app.locals.translations.en, 'json.errors.validation.invalidId', {
+        invalidId: deletePayloads.invalidBadId._id,
+      }),
+    ])
   })
   test('throw error 404 on unknown id', async () => {
     deletePayloads.invalidUnknownId._id =
@@ -1378,6 +1718,13 @@ describe('DELETE /albums', () => {
       .delete('/api/albums/' + deletePayloads.invalidUnknownId._id)
       .send(deletePayloads.invalidUnknownId)
     expect(res.statusCode).toEqual(404)
+    expect(res.body.error).toEqual(
+      t(app.locals.translations.en, 'json.errors.validation.modelNotFound', {
+        modelName: 'album',
+        keyName: '_id',
+        keyValue: deletePayloads.invalidUnknownId._id,
+      })
+    )
   })
   test('throw error 404 on unknown code', async () => {
     deletePayloads.invalidUnknownCode.code =
@@ -1386,6 +1733,13 @@ describe('DELETE /albums', () => {
       .delete('/api/albums/' + deletePayloads.invalidUnknownCode.code)
       .send(deletePayloads.invalidUnknownCode)
     expect(res.statusCode).toEqual(404)
+    expect(res.body.error).toEqual(
+      t(app.locals.translations.en, 'json.errors.validation.modelNotFound', {
+        modelName: 'album',
+        keyName: 'code',
+        keyValue: deletePayloads.invalidUnknownCode.code,
+      })
+    )
   })
   test('throw error 404 on mismatching related band (id)', async () => {
     deletePayloads.validAlbumToDeleteWithId._id = postedAlbumId
@@ -1393,6 +1747,17 @@ describe('DELETE /albums', () => {
       .delete(`/api/bands/${postedUnrelatedBandId}/albums/${postedAlbumId}`)
       .send(deletePayloads.validAlbumToDeleteWithId)
     expect(res.statusCode).toEqual(404)
+    expect(res.body.error).toEqual(
+      t(
+        app.locals.translations.en,
+        'json.errors.validation.relatedModelMismatch',
+        {
+          relatedModelName: 'Band',
+          key: postedUnrelatedBandId,
+          relatedModelNameLowerCase: 'band',
+        }
+      )
+    )
   })
   test('throw error 404 on mismatching related band (code)', async () => {
     deletePayloads.validAlbumToDeleteWithCode.code = postedAlbumCode
@@ -1400,6 +1765,17 @@ describe('DELETE /albums', () => {
       .delete(`/api/bands/${postedUnrelatedBandCode}/albums/${postedAlbumCode}`)
       .send(deletePayloads.validAlbumToDeleteWithCode)
     expect(res.statusCode).toEqual(404)
+    expect(res.body.error).toEqual(
+      t(
+        app.locals.translations.en,
+        'json.errors.validation.relatedModelMismatch',
+        {
+          relatedModelName: 'Band',
+          key: postedUnrelatedBandCode,
+          relatedModelNameLowerCase: 'band',
+        }
+      )
+    )
   })
   test('throw error 404 on unknown related band (id)', async () => {
     deletePayloads.validAlbumToDeleteWithId._id = postedAlbumId
@@ -1411,6 +1787,16 @@ describe('DELETE /albums', () => {
       )
       .send(deletePayloads.validAlbumToDeleteWithId)
     expect(res.statusCode).toEqual(404)
+    expect(res.body.error).toEqual(
+      t(
+        app.locals.translations.en,
+        'json.errors.validation.relatedModelNotFound',
+        {
+          relatedModelName: 'band',
+          key: postedBandId.slice(1) + postedBandId.charAt(0),
+        }
+      )
+    )
   })
   test('throw error 404 on unknown related band (code)', async () => {
     deletePayloads.validAlbumToDeleteWithCode.code = postedAlbumCode
@@ -1418,6 +1804,16 @@ describe('DELETE /albums', () => {
       .delete(`/api/bands/${postedBandCode.slice(1)}/albums/${postedAlbumCode}`)
       .send(deletePayloads.validAlbumToDeleteWithCode)
     expect(res.statusCode).toEqual(404)
+    expect(res.body.error).toEqual(
+      t(
+        app.locals.translations.en,
+        'json.errors.validation.relatedModelNotFound',
+        {
+          relatedModelName: 'band',
+          key: postedBandCode.slice(1),
+        }
+      )
+    )
   })
 
   afterAll(async () => {

@@ -12,7 +12,7 @@ module.exports = (req, res, model, modelToFill) => {
 
   if (invalidFields.length) {
     res.status(400).json({
-      error: 'Invalid fields found in JSON',
+      error: res.translations.json.errors.invalidFields,
       invalidFields: invalidFields,
       expectedFields: model.getFields(),
     })

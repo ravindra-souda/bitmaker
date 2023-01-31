@@ -1,6 +1,7 @@
 'use strict'
 
 const mongoose = require('mongoose')
+const t = require('./translate')
 
 module.exports = async (key, res, relatedModel, relatedModelId) => {
   const checkedRelatedModel = await relatedModel.findById(relatedModelId)
@@ -10,16 +11,29 @@ module.exports = async (key, res, relatedModel, relatedModelId) => {
     const providedModel = await relatedModel.findOne(filter).exec()
     if (!providedModel) {
       res.status(404).json({
-        error: `No ${relatedModel.modelName.toLowerCase()} recorded with the provided _id or code: ${key}`,
+        error: t(
+          res.translations,
+          'json.errors.validation.relatedModelNotFound',
+          {
+            relatedModelName: relatedModel.modelName.toLowerCase(),
+            key,
+          }
+        ),
       })
       return null
     }
 
     if (!checkedRelatedModel._id.equals(providedModel._id)) {
       res.status(404).json({
-        error: `${
-          relatedModel.modelName
-        } found with the provided key ${key} and related ${relatedModel.modelName.toLowerCase()} are mismatching`,
+        error: t(
+          res.translations,
+          'json.errors.validation.relatedModelMismatch',
+          {
+            relatedModelName: relatedModel.modelName,
+            key,
+            relatedModelNameLowerCase: relatedModel.modelName.toLowerCase(),
+          }
+        ),
         ['related' + relatedModel.modelName]: checkedRelatedModel,
         ['provided' + relatedModel.modelName]: providedModel,
       })

@@ -9,6 +9,7 @@ const checkModel = require('./helpers/checkModel')
 const checkRelatedModel = require('./helpers/checkRelatedModel')
 const connect = require('./helpers/connect')
 const fillModel = require('./helpers/fillModel')
+const t = require('./helpers/translate')
 
 module.exports = {
   get: async (req, res) => {
@@ -27,7 +28,7 @@ module.exports = {
     if (filters.duration) {
       if (!/^\d$/.test(filters.duration)) {
         res.status(400).json({
-          error: 'duration must be a positive integer',
+          error: res.translations.song.errors.duration,
         })
         return
       }
@@ -42,8 +43,7 @@ module.exports = {
       let [min, max] = Object.values(filters.rating)
       if (min < 0 || max > 10) {
         res.status(400).json({
-          error:
-            'rating must be an integer between 0 and 10 or a valid min-max range (with min and max between 0 and 10)',
+          error: res.translations.song.errors.rating,
         })
         return
       }
@@ -66,13 +66,13 @@ module.exports = {
     Song.find(filters, null, options, (err, docs) => {
       if (err) {
         res.status(500).json({
-          error: 'Internal mongoDB error',
+          error: res.translations.app.errors.mongoDb,
         })
         return
       }
       if (docs.length === 0) {
         res.status(404).json({
-          error: 'No song found with the given filters',
+          error: res.translations.song.errors.notFound,
           filters,
         })
         return
@@ -96,7 +96,7 @@ module.exports = {
 
     if (relatedAlbum === null) {
       res.status(404).json({
-        error: 'No album found with the given filters',
+        error: res.translations.album.errors.notFound,
         filters: filters,
       })
       return
@@ -117,17 +117,18 @@ module.exports = {
       savedSong = await userSong.save()
     } catch (err) {
       if (err.duplicateSongPosition) {
+        err.error = t(res.translations, err.error)
         res.status(400).json(err)
         return
       }
       // errors for duration and position fields stored in the reason key
-      let errMessages = jsonQuery('errors[**].reason', { data: err }).value
+      let errMessages = jsonQuery('errors[**].reason', { data: err })
       if (typeof errMessages[0] !== 'string') {
-        errMessages = jsonQuery('errors[**].message', { data: err }).value
+        errMessages = jsonQuery('errors[**].message', { data: err })
       }
       res.status(400).json({
-        error: 'Submitted song validation failed',
-        messages: errMessages,
+        error: res.translations.song.errors.validation,
+        messages: t(res.translations, errMessages),
       })
       return
     }
@@ -138,7 +139,7 @@ module.exports = {
       if (err) {
         let errMessages = jsonQuery('errors[**].message', { data: err })
         res.status(500).json({
-          error: 'Could not update the related album',
+          error: res.translations.song.errors.updateAlbum,
           messages: errMessages.value,
         })
         savedSong.remove()
@@ -197,17 +198,20 @@ module.exports = {
       updatedSong = await songToUpdate.save()
     } catch (err) {
       if (err.duplicateSongPosition) {
-        res.status(400).json(err)
+        res.status(400).json({
+          error: res.translations.song.errors.props.position.taken,
+          duplicateSongPosition: err.duplicateSongPosition,
+        })
         return
       }
       // errors for duration and position fields stored in the reason key
-      let errMessages = jsonQuery('errors[**].reason', { data: err }).value
+      let errMessages = jsonQuery('errors[**].reason', { data: err })
       if (typeof errMessages[0] !== 'string') {
-        errMessages = jsonQuery('errors[**].message', { data: err }).value
+        errMessages = jsonQuery('errors[**].message', { data: err })
       }
       res.status(400).json({
-        error: 'Submitted song validation failed',
-        messages: errMessages,
+        error: res.translations.song.errors.validation,
+        messages: t(res.translations, errMessages),
       })
       return
     }
@@ -256,7 +260,7 @@ module.exports = {
     await songToDelete.remove((err, doc) => {
       if (err) {
         res.status(500).json({
-          error: 'Song deletion failed',
+          error: res.translations.song.errors.delete,
         })
         return
       }
@@ -268,7 +272,7 @@ module.exports = {
       // populate the related album (translate the album's object id to the actual document)
       doc.populate('album', (err, doc) => {
         res.status(200).json({
-          success: `Song deleted properly`,
+          success: res.translations.song.success.delete,
           deleted: doc,
         })
       })

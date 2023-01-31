@@ -7,6 +7,7 @@ const SchemaNumber = require('mongoose').SchemaTypes.Number
 const SchemaString = require('mongoose').SchemaTypes.String
 const buildFiltersOptions = require('./buildFiltersOptions')
 const escapeStringRegexp = require('escape-string-regexp')
+const t = require('./translate')
 
 module.exports = async (req, res, model, relatedModelOptions = {}) => {
   const reservedParameters = ['limit', 'skip', 'sort']
@@ -16,7 +17,7 @@ module.exports = async (req, res, model, relatedModelOptions = {}) => {
 
   if (invalidFilters.length) {
     res.status(400).json({
-      error: 'Invalid filters found on URL',
+      error: res.translations.json.errors.filters.invalidFilters,
       invalidFilters: invalidFilters,
       expectedFilters: model.getFilters(),
     })
@@ -41,7 +42,7 @@ module.exports = async (req, res, model, relatedModelOptions = {}) => {
   )
   if (invalidNumericFilters.length) {
     res.status(400).json({
-      error: 'Invalid numeric values',
+      error: res.translations.json.errors.filters.invalidNumericValues,
       invalidNumericFilters: Object.fromEntries(invalidNumericFilters),
     })
     return { filters: null }
@@ -56,7 +57,7 @@ module.exports = async (req, res, model, relatedModelOptions = {}) => {
   )
   if (invalidDateFilters.length) {
     res.status(400).json({
-      error: 'Invalid date values',
+      error: res.translations.json.errors.filters.invalidDateValues,
       invalidDateFilters: Object.fromEntries(invalidDateFilters),
     })
     return { filters: null }
@@ -78,7 +79,7 @@ module.exports = async (req, res, model, relatedModelOptions = {}) => {
     ])
   if (invalidEnumFilters.length) {
     res.status(400).json({
-      error: 'Invalid enum values',
+      error: res.translations.json.errors.filters.invalidEnumValues,
       invalidEnumFilters: invalidEnumFilters,
     })
     return { filters: null }
@@ -105,7 +106,7 @@ module.exports = async (req, res, model, relatedModelOptions = {}) => {
   )
   if (invalidRangeFilters.length) {
     res.status(400).json({
-      error: 'Invalid range values',
+      error: res.translations.json.errors.filters.invalidRangeValues,
       invalidRangeFilters: Object.fromEntries(invalidRangeFilters),
     })
     return { filters: null }
@@ -159,7 +160,14 @@ module.exports = async (req, res, model, relatedModelOptions = {}) => {
       .exec()
     if (!foundRelatedModel) {
       res.status(404).json({
-        error: `No ${relatedModel.modelName} recorded with the provided _id or code: ${relatedModelKey}`,
+        error: t(
+          res.translations,
+          'json.errors.validation.relatedModelNotFound',
+          {
+            relatedModelName: relatedModel.modelName.toLowerCase(),
+            key: relatedModelKey,
+          }
+        ),
       })
       return { filters: null }
     }

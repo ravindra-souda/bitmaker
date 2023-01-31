@@ -8,7 +8,7 @@ const albumSchema = new mongoose.Schema(
   {
     title: {
       type: String,
-      required: [true, 'An album must have a title'],
+      required: [true, 'album.errors.props.title'],
       trim: true,
     },
     code: {
@@ -18,12 +18,10 @@ const albumSchema = new mongoose.Schema(
       type: Date,
       validate: {
         validator: (date) => !isNaN(Date.parse(date)),
-        message: (date) => `${date.value} is not a valid date!`,
+        message: (date) =>
+          `album.errors.props.releaseDate.invalid,,{"date":${date.value}}`,
       },
-      min: [
-        new Date('January 01, 1900'),
-        'releaseDate is before January 01, 1900',
-      ],
+      min: [new Date('January 01, 1900'), 'album.errors.props.releaseDate.min'],
     },
     type: {
       type: String,

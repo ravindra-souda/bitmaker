@@ -1,0 +1,101 @@
+{
+  "album": {
+    "errors": {
+      "notFound": "Aucun album n'a été trouvé avec les filtres fournis",
+      "validation": "L'album posté n'a pas pu être validé",
+      "updateBand": "Le groupe lié à cet album n'a pas pu être mis à jour",
+      "delete": "L'album n'a pas pu être supprimé",
+      "props": {
+        "title": "Un album doit avoir un titre",
+        "releaseDate": {
+          "invalid": "${date} n'est pas une date valide!",
+          "min": "releaseDate est avant le 1er Janvier 1900"
+        },
+        "releaseYear": "releaseYear doit être un entier supérieur à 1900"
+      }
+    },
+    "success": {
+      "delete": "Album supprimé avec succès"
+    }
+  },
+  "app": {
+    "errors": {
+      "mongoDb": "Erreur interne mongoDB"
+    }
+  },
+  "band": {
+    "errors": {
+      "notFound": "Aucun groupe n'a été trouvé avec les filtres fournis",
+      "creationSameName": "Un groupe avec le même nom a déjà été enregistré",
+      "validation": "Le groupe posté n'a pas pu être validé",
+      "cascadeDelete": "Groupe lié à au moins un album",
+      "cascadeDeleteHint": "Pour supprimer ce groupe et tous les albums qui lui sont liés, vous pouvez ajouter la ligne { \"cascadeDeleteAlbums\" : true } à votre JSON",
+      "delete": "Le groupe n'a pas pu être supprimé",
+      "props": {
+        "name": "Un groupe doit avoir un nom",
+        "formationYear": {
+          "invalid": "formationYear (${value}) doit être un entier!",
+          "min": "formationYear doit être après 1900",
+          "max": "formationYear doit être avant ${value}"
+        }
+      }
+    },
+    "success": {
+      "delete": "Groupe supprimé avec succès"
+    }
+  },
+  "song": {
+    "errors": {
+      "duration": "duration doit être un entier positif",
+      "rating": "rating doit être un entier compris entre 0 et 10 ou un intervalle valide min-max (avec min et max entre 0 et 10)",
+      "notFound": "Aucune chanson n'a été trouvée avec les filtres fournis",
+      "validation": "La chanson postée n'a pas pu être validée",
+      "updateAlbum": "L'album lié à cette chanson n'a pas pu être mis à jour",
+      "delete": "La chanson n'a pas pu être supprimée",
+      "props": {
+        "title": "Une chanson doit avoir un titre",
+        "position": {
+          "required": "Une chanson doit avoir une position dans l'album",
+          "invalid": "position doit être un entier positif, ${val} n'est pas valide",
+          "taken": "Une autre chanson a déjà été enregistrée avec la même position"
+        },
+        "duration": "duration doit être au format mm:ss, ${val} n'est pas valide",
+        "myRating": "myRating doit être un entier compris entre 0 et 10"
+      }
+    },
+    "success": {
+      "delete": "Chanson supprimée avec succès"
+    }
+  },
+  "json": {
+    "errors": {
+      "invalidFields": "Le JSON posté contient des champs invalides, les champs attendus sont précisés dans expectedFields",
+      "filters": {
+        "invalidDateValues": "Dates invalides",
+        "invalidEnumValues": "Valeurs enum invalides",
+        "invalidFilters": "Filtres invalides envoyés dans l'URL",
+        "invalidNumericValues": "Valeurs numériques invalides",
+        "invalidRangeValues": "Intervalles invalides",
+        "pagination": {
+          "limit": "limit doit être un entier positif inférieur à ${apiLimit}: ${limit} n'est pas valide",
+          "skip": "skip doit être un entier positif: ${skip} n'est pas valide",
+          "invalidValues": "Valeurs de pagination invalides envoyées dans l'URL"
+        },
+        "sort": "Champs de tri invalides trouvés dans l'URL"
+      },
+      "validation": {
+        "failed": "La validation du JSON envoyé a échoué",
+        "keyNotFound": "Le JSON doit contenir un champ clé _id ou code",
+        "bothKeys": "Le JSON doit contenir un champ clé _id ou code, mais pas les deux à la fois",
+        "idMismatch": "Le champ _id contenu dans le JSON (${jsonId}) et le paramètre _id trouvé dans l'URL (${urlKey}) doivent correspondre",
+        "codeMismatch": "Le code contenu dans le JSON (${jsonCode}) et le code trouvé dans l'URL (${urlKey}) doivent correspondre",
+        "invalidId": "Le champ _id envoyé est invalide: ${invalidId}",
+        "mandatoryKey": "Le JSON doit contenir un champ clé ${mandatoryKey}",
+        "mandatoryKeyMismatch": "Le document ${modelName} enregistré avec le champ clé ${keyName} (${keyValue}) n'a pas la même valeur pour le champ ${mandatoryKey}",
+        "modelNotFound": "Aucun modèle '${modelName}' n'a été enregistré avec le champ clé ${keyName} ayant pour valeur: ${keyValue}",
+        "relatedModelNotFound": "Aucun modèle '${relatedModelName}' n'a été enregistré avec un champ _id ou code: ${key}",
+        "relatedModelMismatch": "Le document '${relatedModelName}' trouvé avec le champ clé fourni ${key} et le document lié '${relatedModelNameLowerCase}' doivent correspondre"
+      }
+    }
+  }
+}

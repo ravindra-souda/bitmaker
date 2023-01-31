@@ -8,6 +8,7 @@ const connect = require('./helpers/connect')
 const checkModel = require('./helpers/checkModel')
 const checkRelatedModel = require('./helpers/checkRelatedModel')
 const fillModel = require('./helpers/fillModel')
+const t = require('./helpers/translate')
 
 module.exports = {
   get: async (req, res) => {
@@ -29,7 +30,7 @@ module.exports = {
       let releaseYear = new Date(Date.UTC(filters.releaseYear))
       if (isNaN(releaseYear.getTime()) || minReleaseYear > releaseYear) {
         res.status(400).json({
-          error: 'releaseYear must be an integer greater than 1900',
+          error: res.translations.album.errors.props.releaseYear,
         })
         return
       }
@@ -43,13 +44,13 @@ module.exports = {
     Album.find(filters, null, options, (err, docs) => {
       if (err) {
         res.status(500).json({
-          error: 'Internal mongoDB error',
+          error: res.translations.app.errors.mongoDb,
         })
         return
       }
       if (docs.length === 0) {
         res.status(404).json({
-          error: 'No album found with the given filters',
+          error: res.translations.album.errors.notFound,
           filters: filters,
         })
         return
@@ -72,7 +73,7 @@ module.exports = {
     const relatedBand = await Band.findOne(filters).exec()
     if (relatedBand === null) {
       res.status(404).json({
-        error: 'No band found with the given filters',
+        error: res.translations.band.errors.notFound,
         filters: filters,
       })
       return
@@ -94,8 +95,8 @@ module.exports = {
     } catch (err) {
       let errMessages = jsonQuery('errors[**].message', { data: err })
       res.status(400).json({
-        error: 'Submitted album validation failed',
-        messages: errMessages.value,
+        error: res.translations.album.errors.validation,
+        messages: t(res.translations, errMessages),
       })
       return
     }
@@ -106,7 +107,7 @@ module.exports = {
       if (err) {
         let errMessages = jsonQuery('errors[**].message', { data: err })
         res.status(500).json({
-          error: 'Could not update the related band',
+          error: res.translations.album.errors.updateBand,
           messages: errMessages.value,
         })
         savedAlbum.remove()
@@ -151,8 +152,8 @@ module.exports = {
       if (err) {
         let errMessages = jsonQuery('errors[**].message', { data: err })
         res.status(400).json({
-          error: 'Submitted album validation failed',
-          messages: errMessages.value,
+          error: res.translations.album.errors.validation,
+          messages: t(res.translations, errMessages),
         })
         return
       }
@@ -188,7 +189,7 @@ module.exports = {
     await albumToDelete.remove((err, doc) => {
       if (err) {
         res.status(500).json({
-          error: 'Album deletion failed',
+          error: res.translations.album.errors.delete,
         })
         return
       }
@@ -200,7 +201,7 @@ module.exports = {
       // populate the related band (translate the band's object id to the actual document)
       doc.populate('band', (err, doc) => {
         res.status(200).json({
-          success: `Album deleted properly`,
+          success: res.translations.album.success.delete,
           deleted: doc,
         })
       })

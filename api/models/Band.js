@@ -9,7 +9,7 @@ const bandSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: [true, 'A band must have a name'],
+      required: [true, 'band.errors.props.name'],
       trim: true,
     },
     code: {
@@ -19,10 +19,14 @@ const bandSchema = new mongoose.Schema(
       type: Number,
       validate: {
         validator: (year) => Number.isInteger(year),
-        message: (year) => `${year.value} must be an integer!`,
+        message: (year) =>
+          `band.errors.props.formationYear.invalid,,{"value": ${year.value}}`,
       },
-      min: [1900, 'Formation year must be after 1900'],
-      max: [yearNow, 'Formation year must be before ' + yearNow],
+      min: [1900, 'band.errors.props.formationYear.min'],
+      max: [
+        yearNow,
+        `band.errors.props.formationYear.max,,{"value": ${yearNow}}`,
+      ],
     },
     bio: String,
     tags: {

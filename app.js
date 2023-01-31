@@ -11,6 +11,7 @@ const {
   checkJson,
   trimJson,
 } = require('./api/middleware/checkRequest')
+const initTranslations = require('./api/middleware/initTranslations')
 
 const envFile = process.env.NODE_ENV ? `.env.${process.env.NODE_ENV}` : '.env'
 dotenv.config({ path: envFile })
@@ -23,6 +24,7 @@ app.use(logger('dev'))
 app.use(checkHeaders)
 app.use(express.json({ verify: checkJson }))
 app.use(trimJson)
+app.use(initTranslations)
 app.use(express.urlencoded({ extended: false }))
 app.use(cookieParser())
 
