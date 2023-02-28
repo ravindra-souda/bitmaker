@@ -1,5 +1,3 @@
-'use strict'
-
 const translateSingleMessage = (translations, key, values = {}) => {
   if (values?.constructor !== Object) {
     return key
@@ -30,7 +28,7 @@ const translateValidationMessages = (translations, messages) => {
   })
 }
 
-module.exports = (translations, key, values = {}) => {
+export default (translations, key, values = {}) => {
   if (key.value?.constructor === Array) {
     return translateValidationMessages(translations, key)
   }

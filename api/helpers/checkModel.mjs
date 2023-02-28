@@ -1,10 +1,8 @@
-'use strict'
+import mongoose from 'mongoose'
+import connect from './connect.mjs'
+import t from './translate.mjs'
 
-const mongoose = require('mongoose')
-const connect = require('./connect')
-const t = require('./translate')
-
-module.exports = async (req, res, model, mandatoryKey) => {
+export default async (req, res, model, mandatoryKey) => {
   let messages = []
   if (!req.body._id && !req.body.code) {
     messages.push(res.translations.json.errors.validation.keyNotFound)

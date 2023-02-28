@@ -1,6 +1,4 @@
-'use strict'
-
-module.exports = (req, res, model, modelToFill) => {
+export default (req, res, model, modelToFill) => {
   // exclude _id and code from the fields to update
   const submittedFields = Object.keys(req.body).filter(
     (field) => !['_id', 'code'].includes(field)

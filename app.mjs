@@ -1,17 +1,15 @@
-'use strict'
+import express from 'express'
+import cookieParser from 'cookie-parser'
+import logger from 'morgan'
+import dotenv from 'dotenv'
 
-const express = require('express')
-const cookieParser = require('cookie-parser')
-const logger = require('morgan')
-const dotenv = require('dotenv')
-
-const router = require('./routes/api')
-const {
+import router from './routes/api.mjs'
+import {
   checkHeaders,
   checkJson,
   trimJson,
-} = require('./api/middleware/checkRequest')
-const initTranslations = require('./api/middleware/initTranslations')
+} from './api/middleware/checkRequest.mjs'
+import initTranslations from './api/middleware/initTranslations.mjs'
 
 const envFile = process.env.NODE_ENV ? `.env.${process.env.NODE_ENV}` : '.env'
 dotenv.config({ path: envFile })
@@ -30,4 +28,4 @@ app.use(cookieParser())
 
 app.use('/api', router)
 
-module.exports = app
+export default app

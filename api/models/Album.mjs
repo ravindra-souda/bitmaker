@@ -1,7 +1,6 @@
-'use strict'
-
-const mongoose = require('mongoose')
-const slugify = require('../helpers/slugify')
+import mongoose from 'mongoose'
+import autopopulate from 'mongoose-autopopulate'
+import slugify from '../helpers/slugify.mjs'
 
 const typeEnums = ['Compilation', 'EP', 'Live', 'Single', 'Studio']
 const albumSchema = new mongoose.Schema(
@@ -94,9 +93,8 @@ albumSchema.pre('save', async function (next) {
 // needed for the recursion-free populate
 albumSchema.options.selectPopulatedPaths = false
 
-albumSchema.plugin(require('mongoose-autopopulate'))
+albumSchema.plugin(autopopulate)
 
-module.exports = {
-  Album: mongoose.model('Album', albumSchema),
-  albumSchema: albumSchema,
-}
+const Album = mongoose.model('Album', albumSchema)
+
+export { Album, albumSchema }

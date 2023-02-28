@@ -1,14 +1,12 @@
-'use strict'
+import Band from './models/Band.mjs'
+import jsonQuery from 'json-query'
+import buildFilters from './helpers/buildFilters.mjs'
+import connect from './helpers/connect.mjs'
+import checkModel from './helpers/checkModel.mjs'
+import fillModel from './helpers/fillModel.mjs'
+import t from './helpers/translate.mjs'
 
-const Band = require('./models/Band')
-const jsonQuery = require('json-query')
-const buildFilters = require('./helpers/buildFilters')
-const connect = require('./helpers/connect')
-const checkModel = require('./helpers/checkModel')
-const fillModel = require('./helpers/fillModel')
-const t = require('./helpers/translate')
-
-module.exports = {
+export default {
   get: async (req, res) => {
     if (!(await connect(res))) {
       return

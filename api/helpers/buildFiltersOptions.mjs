@@ -1,8 +1,6 @@
-'use strict'
+import t from './translate.mjs'
 
-const t = require('./translate')
-
-module.exports = (limit, skip, sort, res, model) => {
+export default (limit, skip, sort, res, model) => {
   let messages = []
   const regex = /^[0-9]+$/
   if (!regex.test(limit) || limit > process.env.MONGODB_LIMIT_RESULTS) {

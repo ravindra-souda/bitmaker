@@ -1,15 +1,13 @@
-'use strict'
-
-const dotenv = require('dotenv')
+import dotenv from 'dotenv'
 
 dotenv.config({ path: '.env.test' })
 
-const { Album } = require('./api/models/Album')
-const Band = require('./api/models/Band')
-const Song = require('./api/models/Song')
-const connect = require('./api/helpers/connect')
+import { Album } from './api/models/Album.mjs'
+import Band from './api/models/Band.mjs'
+import Song from './api/models/Song.mjs'
+import connect from './api/helpers/connect.mjs'
 
-module.exports = async () => {
+export default async () => {
   if (!(await connect())) {
     return
   }

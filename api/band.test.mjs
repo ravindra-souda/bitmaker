@@ -1,11 +1,9 @@
-'use strict'
-
-const mongoose = require('mongoose')
-const request = require('supertest')
-const slugify = require('./helpers/slugify')
-const app = require('../app')
-const Band = require('./models/Band')
-const t = require('./helpers/translate')
+import mongoose from 'mongoose'
+import request from 'supertest'
+import slugify from './helpers/slugify.mjs'
+import app from '../app.mjs'
+import Band from './models/Band.mjs'
+import t from './helpers/translate.mjs'
 
 let postedBandId,
   postedBandCode,

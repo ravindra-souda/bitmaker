@@ -1,10 +1,9 @@
-'use strict'
+import express from 'express'
+import albumController from '../api/album.mjs'
+import bandController from '../api/band.mjs'
+import songController from '../api/song.mjs'
 
-const express = require('express')
 const router = express.Router()
-const albumController = require('../api/album')
-const bandController = require('../api/band')
-const songController = require('../api/song')
 
 router.get('/bands/:key', (req, res) => {
   bandController.get(req, res)
@@ -93,4 +92,4 @@ router.delete('/bands/:bandKey/albums/:albumKey/songs/:key', (req, res) => {
   songController.delete(req, res)
 })
 
-module.exports = router
+export default router

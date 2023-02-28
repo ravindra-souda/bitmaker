@@ -1,11 +1,9 @@
-'use strict'
-
-const mongoose = require('mongoose')
-const request = require('supertest')
-const app = require('../app')
-const { Album } = require('./models/Album')
-const Band = require('./models/Band')
-const t = require('./helpers/translate')
+import mongoose from 'mongoose'
+import request from 'supertest'
+import app from '../app.mjs'
+import { Album } from './models/Album.mjs'
+import Band from './models/Band.mjs'
+import t from './helpers/translate.mjs'
 
 let postedBandId,
   postedBandCode,

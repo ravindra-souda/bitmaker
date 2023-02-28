@@ -1,9 +1,7 @@
-'use strict'
+import mongoose from 'mongoose'
+import t from './translate.mjs'
 
-const mongoose = require('mongoose')
-const t = require('./translate')
-
-module.exports = async (key, res, relatedModel, relatedModelId) => {
+export default async (key, res, relatedModel, relatedModelId) => {
   const checkedRelatedModel = await relatedModel.findById(relatedModelId)
 
   if (key) {

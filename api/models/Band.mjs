@@ -1,8 +1,7 @@
-'use strict'
-
-const mongoose = require('mongoose')
-const slugify = require('../helpers/slugify')
-const { Album } = require('./Album')
+import mongoose from 'mongoose'
+import autopopulate from 'mongoose-autopopulate'
+import slugify from '../helpers/slugify.mjs'
+import { Album } from './Album.mjs'
 const yearNow = new Date().getFullYear()
 
 const bandSchema = new mongoose.Schema(
@@ -81,6 +80,6 @@ bandSchema.pre('remove', async function (next) {
 // needed for the recursion-free populate
 bandSchema.options.selectPopulatedPaths = false
 
-bandSchema.plugin(require('mongoose-autopopulate'))
+bandSchema.plugin(autopopulate)
 
-module.exports = mongoose.model('Band', bandSchema)
+export default mongoose.model('Band', bandSchema)

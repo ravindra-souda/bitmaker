@@ -1,10 +1,8 @@
-'use strict'
-
-const mongoose = require('mongoose')
-const request = require('supertest')
-const { readFile } = require('fs/promises')
-const app = require('./app')
-const t = require('./api/helpers/translate')
+import mongoose from 'mongoose'
+import request from 'supertest'
+import { readFile } from 'fs/promises'
+import app from './app.mjs'
+import t from './api/helpers/translate.mjs'
 
 describe('Main app', () => {
   test('throw error 400 on empty submitted body', async () => {

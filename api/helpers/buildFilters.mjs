@@ -1,15 +1,14 @@
-'use strict'
+import mongoose from 'mongoose'
+import escapeStringRegexp from 'escape-string-regexp'
+import buildFiltersOptions from './buildFiltersOptions.mjs'
+import t from './translate.mjs'
 
-const mongoose = require('mongoose')
-const SchemaArray = require('mongoose').SchemaTypes.Array
-const SchemaDate = require('mongoose').SchemaTypes.Date
-const SchemaNumber = require('mongoose').SchemaTypes.Number
-const SchemaString = require('mongoose').SchemaTypes.String
-const buildFiltersOptions = require('./buildFiltersOptions')
-const escapeStringRegexp = require('escape-string-regexp')
-const t = require('./translate')
+const SchemaArray = mongoose.SchemaTypes.Array
+const SchemaDate = mongoose.SchemaTypes.Date
+const SchemaNumber = mongoose.SchemaTypes.Number
+const SchemaString = mongoose.SchemaTypes.String
 
-module.exports = async (req, res, model, relatedModelOptions = {}) => {
+export default async (req, res, model, relatedModelOptions = {}) => {
   const reservedParameters = ['limit', 'skip', 'sort']
   const invalidFilters = Object.keys(req.query).filter(
     (field) => !model.getFilters().concat(reservedParameters).includes(field)

@@ -1,8 +1,6 @@
-'use strict'
+import mongoose from 'mongoose'
 
-const mongoose = require('mongoose')
-
-module.exports = async (res) => {
+export default async (res) => {
   try {
     if (mongoose.connection.readyState === 1) {
       return true

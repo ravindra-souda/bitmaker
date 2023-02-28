@@ -1,7 +1,6 @@
-'use strict'
-
-const mongoose = require('mongoose')
-const slugify = require('../helpers/slugify')
+import mongoose from 'mongoose'
+import autopopulate from 'mongoose-autopopulate'
+import slugify from '../helpers/slugify.mjs'
 
 const songSchema = new mongoose.Schema(
   {
@@ -137,6 +136,6 @@ mongoose.set('toJSON', { getters: true, transform: removePrivateProps })
 // needed for the recursion-free populate
 songSchema.options.selectPopulatedPaths = false
 
-songSchema.plugin(require('mongoose-autopopulate'))
+songSchema.plugin(autopopulate)
 
-module.exports = mongoose.model('Song', songSchema)
+export default mongoose.model('Song', songSchema)

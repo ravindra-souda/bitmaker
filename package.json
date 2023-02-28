@@ -2,13 +2,14 @@
   "name": "bitmaker",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
-    "dev": "./node_modules/nodemon/bin/nodemon.js ./bin/www",
+    "dev": "./node_modules/nodemon/bin/nodemon.js ./bin/www.mjs",
     "husky": "npm test && npm run lint",
     "prepare": "husky install && npx husky set .husky/pre-commit \"npm run husky\"",
     "lint": "lint-staged",
-    "start": "node ./bin/www",
-    "test": "jest"
+    "start": "node ./bin/www.mjs",
+    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest"
   },
   "dependencies": {
     "cookie-parser": "~1.4.4",

@@ -1,6 +1,4 @@
-'use strict'
-
-const { readdir, readFile } = require('fs/promises')
+import { readdir, readFile } from 'fs/promises'
 
 const initAvailableLangs = async (req, res) => {
   if (req.app.locals.availableLangs?.constructor === Array) {
@@ -35,7 +33,7 @@ const initSelectedLang = async (req, res, lang) => {
   res.translations = req.app.locals.translations[lang]
 }
 
-module.exports = async (req, res, next) => {
+export default async (req, res, next) => {
   if (!(await initAvailableLangs(req, res))) {
     return
   }
