@@ -1,0 +1,3736 @@
+openapi: 3.0.0
+info:
+  title: bitmaker - my simple music API
+  version: 1.0.0
+  contact:
+    name: RAVINDRA Soudakar
+    email: ravindra.soudakar@free.fr
+servers:
+  - url: http://localhost:3000/api/
+paths:
+  /bands:
+    post:
+      tags:
+        - bands
+      summary: Create a new band
+      requestBody:
+        $ref: '#/components/requestBodies/bandToCreate'
+      responses:
+        '201':
+          $ref: '#/components/responses/bandCreated'
+        '400':
+          $ref: '#/components/responses/bandCreationRejected'
+        '500':
+          $ref: '#/components/responses/serverSideError'
+    get:
+      tags:
+        - bands
+      summary: Search bands by any combination of name, formationYear or tags and take advantage of pagination options like limit, skip and sort
+      parameters:
+        - $ref: '#/components/parameters/name'
+        - $ref: '#/components/parameters/formationYear'
+        - $ref: '#/components/parameters/tags'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/skip'
+        - $ref: '#/components/parameters/bandSort'
+        - $ref: '#/components/parameters/lang'
+      responses:
+        '200':
+          $ref: '#/components/responses/bandsFound'
+        '400':
+          $ref: '#/components/responses/bandSearchRejected'
+        '404':
+          $ref: '#/components/responses/bandSearchNotFound'
+        '500':
+          $ref: '#/components/responses/serverSideError'
+  /bands/{bandKey}:
+    parameters:
+      - $ref: '#/components/parameters/bandKey'
+    delete:
+      tags:
+        - bands
+      summary: Delete a band with either its _id or code
+      requestBody:
+        $ref: '#/components/requestBodies/bandToDelete'
+      responses:
+        '200':
+          $ref: '#/components/responses/bandDeleted'
+        '400':
+          $ref: '#/components/responses/bandDeletionRejected'
+        '404':
+          $ref: '#/components/responses/bandNotFound'
+        '409':
+          $ref: '#/components/responses/bandDeletionWithLinkedAlbums'
+        '500':
+          $ref: '#/components/responses/serverSideErrorOnBandDeletion'
+    patch:
+      tags:
+        - bands
+      summary: Update a band with either its _id or code
+      requestBody:
+        $ref: '#/components/requestBodies/bandToUpdate'
+      responses:
+        '200':
+          $ref: '#/components/responses/bandUpdated'
+        '400':
+          $ref: '#/components/responses/bandUpdateRejected'
+        '404':
+          $ref: '#/components/responses/bandNotFound'
+        '500':
+          $ref: '#/components/responses/serverSideError'
+    get:
+      tags:
+        - bands
+      summary: Search a band by either its _id, code and eventually any other band property like name, formationYear and tags
+      parameters:
+        - $ref: '#/components/parameters/name'
+        - $ref: '#/components/parameters/formationYear'
+        - $ref: '#/components/parameters/tags'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/skip'
+        - $ref: '#/components/parameters/bandSort'
+        - $ref: '#/components/parameters/lang'
+      responses:
+        '200':
+          $ref: '#/components/responses/bandFound'
+        '400':
+          $ref: '#/components/responses/bandSearchRejected'
+        '404':
+          $ref: '#/components/responses/bandSearchNotFound'
+        '500':
+          $ref: '#/components/responses/serverSideError'
+  /bands/{bandKey}/albums:
+    parameters:
+      - $ref: '#/components/parameters/bandKey'
+    post:
+      tags:
+        - albums
+      summary: Create a new album
+      requestBody:
+        $ref: '#/components/requestBodies/albumToCreate'
+      responses:
+        '201':
+          $ref: '#/components/responses/albumCreated'
+        '400':
+          $ref: '#/components/responses/albumCreationRejected'
+        '404':
+          $ref: '#/components/responses/bandSearchNotFound'
+  /bands/{bandKey}/albums/{albumKey}:
+    parameters:
+      - $ref: '#/components/parameters/bandKey'
+      - $ref: '#/components/parameters/albumKey'
+    delete:
+      tags:
+        - albums
+      summary: Delete an album with either its _id or code using the related band
+      description: |
+        To bypass the relation check between band and album, this alternate route is also available:
+        ``` 
+          /albums/{albumKey}
+        ```
+      requestBody:
+        $ref: '#/components/requestBodies/albumToDelete'
+      responses:
+        '200':
+          $ref: '#/components/responses/albumDeleted'
+        '400':
+          $ref: '#/components/responses/albumDeletionRejected'
+        '404':
+          $ref: '#/components/responses/bandOrAlbumNotFound'
+    patch:
+      tags:
+        - albums
+      summary: Update an album with either its _id or code using the related band
+      description: |
+        To bypass the relation check between band and album, this alternate route is also available:
+        ``` 
+          /albums/{albumKey}
+        ```
+      requestBody:
+        $ref: '#/components/requestBodies/albumToUpdate'
+      responses:
+        '200':
+          $ref: '#/components/responses/albumUpdated'
+        '400':
+          $ref: '#/components/responses/albumUpdateRejected'
+        '404':
+          $ref: '#/components/responses/bandOrAlbumNotFound'
+    get:
+      tags:
+        - albums
+      summary: Search an album by either its _id, code and eventually any other album property like title, releaseDate, releaseYear, tags or type
+      description: |
+        To bypass the relation check between band and album, this alternate route is also available:
+        ``` 
+          /albums/{albumKey}
+        ```
+      parameters:
+        - $ref: '#/components/parameters/albumTitle'
+        - $ref: '#/components/parameters/albumReleaseDate'
+        - $ref: '#/components/parameters/albumReleaseYear'
+        - $ref: '#/components/parameters/tags'
+        - $ref: '#/components/parameters/albumType'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/skip'
+        - $ref: '#/components/parameters/albumSort'
+        - $ref: '#/components/parameters/lang'
+      responses:
+        '200':
+          $ref: '#/components/responses/albumFound'
+        '400':
+          $ref: '#/components/responses/albumSearchRejected'
+        '404':
+          $ref: '#/components/responses/bandOrAlbumSearchNotFound'
+        '500':
+          $ref: '#/components/responses/serverSideError'
+  /albums:
+    get:
+      tags:
+        - albums
+      summary: Search albums by any combination of title, releaseDate, releaseYear, tags or type
+      description: |
+        For filtering with the related album, the following route is available:
+        ``` 
+          /bands/{bandKey}/albums
+        ```
+      parameters:
+        - $ref: '#/components/parameters/albumTitle'
+        - $ref: '#/components/parameters/albumReleaseDate'
+        - $ref: '#/components/parameters/albumReleaseYear'
+        - $ref: '#/components/parameters/tags'
+        - $ref: '#/components/parameters/albumType'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/skip'
+        - $ref: '#/components/parameters/albumSort'
+        - $ref: '#/components/parameters/lang'
+      responses:
+        '200':
+          $ref: '#/components/responses/albumsFound'
+        '400':
+          $ref: '#/components/responses/albumSearchRejected'
+        '404':
+          $ref: '#/components/responses/albumSearchNotFound'
+        '500':
+          $ref: '#/components/responses/serverSideError'
+  /bands/{bandKey}/albums/{albumKey}/songs:
+    parameters:
+      - $ref: '#/components/parameters/bandKey'
+      - $ref: '#/components/parameters/albumKey'
+    post:
+      tags:
+        - songs
+      summary: Create a new song
+      description: |
+        To bypass the relation check between band and album, this alternate route is also available:
+        ``` 
+          /albums/{albumKey}/songs
+        ```
+      requestBody:
+        $ref: '#/components/requestBodies/songToCreate'
+      responses:
+        '201':
+          $ref: '#/components/responses/songCreated'
+        '400':
+          $ref: '#/components/responses/songCreationRejected'
+        '404':
+          $ref: '#/components/responses/bandOrAlbumSearchNotFound'
+        '500':
+          $ref: '#/components/responses/serverSideError'
+  /bands/{bandKey}/albums/{albumKey}/songs/{songKey}:
+    parameters:
+      - $ref: '#/components/parameters/bandKey'
+      - $ref: '#/components/parameters/albumKey'
+      - $ref: '#/components/parameters/songKey'
+    delete:
+      tags:
+        - songs
+      summary: Delete a song with either its _id or code using the related band and album
+      description: |
+        To bypass relation checks between bands, albums or songs, these alternate routes are also available:
+        ``` 
+          /albums/{albumKey}/songs/{songKey}
+          /songs/{songKey}
+        ```
+      requestBody:
+        $ref: '#/components/requestBodies/songToDelete'
+      responses:
+        '200':
+          $ref: '#/components/responses/songDeleted'
+        '400':
+          $ref: '#/components/responses/songDeletionRejected'
+        '404':
+          $ref: '#/components/responses/bandOrAlbumOrSongNotFound'
+    patch:
+      tags:
+        - songs
+      summary: Update a song with either its _id or code using the related band and album
+      description: |
+        To bypass relation checks between bands, albums or songs, these alternate routes are also available:
+        ``` 
+          /albums/{albumKey}/songs/{songKey}
+          /songs/{songKey}
+        ```
+      requestBody:
+        $ref: '#/components/requestBodies/songToUpdate'
+      responses:
+        '200':
+          $ref: '#/components/responses/songUpdated'
+        '400':
+          $ref: '#/components/responses/songUpdateRejected'
+        '404':
+          $ref: '#/components/responses/bandOrAlbumOrSongNotFound'
+    get:
+      tags:
+        - songs
+      summary: Search a song by either its _id, code and eventually any other song property like title, duration, singers or rating filtered by related band and album
+      description: |
+        To bypass relation checks between bands, albums or songs, these alternate routes are also available:
+        ``` 
+          /albums/{albumKey}/songs/{songKey}
+          /songs/{songKey}
+        ```
+      parameters:
+        - $ref: '#/components/parameters/songTitle'
+        - $ref: '#/components/parameters/songDuration'
+        - $ref: '#/components/parameters/songSingers'
+        - $ref: '#/components/parameters/songRating'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/skip'
+        - $ref: '#/components/parameters/songSort'
+        - $ref: '#/components/parameters/lang'
+      responses:
+        '200':
+          $ref: '#/components/responses/songFound'
+        '400':
+          $ref: '#/components/responses/songSearchRejected'
+        '404':
+          $ref: '#/components/responses/bandOrAlbumOrSongSearchNotFound'
+        '500':
+          $ref: '#/components/responses/serverSideError'
+  /songs:
+    get:
+      tags:
+        - songs
+      summary: Search songs by any combination of title, duration, singers or rating
+      description: |
+        For filtering with **related album or band**, prefix these resources to the URL like one of the following paths:
+        ``` 
+          /albums/{albumKey}/songs
+          /bands/{bandKey}/albums/{albumKey}/songs
+        ```
+      parameters:
+        - $ref: '#/components/parameters/songTitle'
+        - $ref: '#/components/parameters/songDuration'
+        - $ref: '#/components/parameters/songSingers'
+        - $ref: '#/components/parameters/songRating'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/skip'
+        - $ref: '#/components/parameters/songSort'
+        - $ref: '#/components/parameters/lang'
+      responses:
+        '200':
+          $ref: '#/components/responses/songFound'
+        '400':
+          $ref: '#/components/responses/songSearchRejected'
+        '404':
+          $ref: '#/components/responses/songsSearchNotFound'
+        '500':
+          $ref: '#/components/responses/serverSideError'
+components:
+  parameters:
+    albumKey:
+      in: path
+      name: albumKey
+      description: Either album's _id or code
+      required: true
+      style: simple
+      schema:
+        type: string
+      examples:
+        _id:
+          value: 6411af6f149db318a3ec21c4
+        code:
+          value: 3-the-colour-and-the-shape
+    albumReleaseDate:
+      in: query
+      name: releaseDate
+      description: Sometime after 1900-01-01. Must be a valid date, YYYY-MM-DD format.
+      schema:
+        type: string
+      examples:
+        april 12th, 2011:
+          value: 2011-04-12
+    albumReleaseYear:
+      in: query
+      name: releaseYear
+      description: Sometime after 1900.
+      schema:
+        type: integer
+        minimum: 1900
+      examples:
+        2011:
+          value: 2011
+    albumTitle:
+      in: query
+      name: title
+      description: Can be part of the title, case insensitive
+      schema:
+        type: string
+      examples:
+        search by title:
+          value: Wasting Light
+        search by a portion of the title (case insensitive):
+          value: astinG liGH
+    albumType:
+      in: query
+      name: type
+      schema:
+        type: string
+        enum: ['Compilation', 'EP', 'Live', 'Single', 'Studio']
+    bandKey:
+      in: path
+      name: bandKey
+      description: Either band's _id or code
+      required: true
+      style: simple
+      schema:
+        type: string
+      examples:
+        _id:
+          value: 640efc3e10edcd809102d3b9
+        code:
+          value: foo-fighters
+    name:
+      in: query
+      name: name
+      description: Can be part of the name, case insensitive
+      style: form
+      schema:
+        type: string
+      examples:
+        search by name:
+          value: oasis
+        search by a portion of the name (case insensitive):
+          value: AsI
+    formationYear:
+      in: query
+      name: formationYear
+      description: Sometime between 1900 and the current year included
+      style: form
+      schema:
+        type: integer
+        minimum: 1900
+    songTitle:
+      in: query
+      name: title
+      description: Can be part of the title, case insensitive
+      schema:
+        type: string
+      examples:
+        search by title:
+          value: Hey, Johnny Park!
+        search by a portion of the title (case insensitive):
+          value: jOhnnY p
+    songDuration:
+      in: query
+      name: duration
+      description: Time in minutes, must be a positive integer
+      schema:
+        type: integer
+        minimum: 0
+      examples:
+        search songs lasting 4:00 minutes:
+          value: 4
+          description: Will fetch every song lasting from 4:00 minutes minimum to 4:59 maximum
+    songSingers:
+      in: query
+      name: singers
+      description: Can be part of the singers field, case insensitive
+      schema:
+        type: string
+      examples:
+        search by singers:
+          value: Dave Grohl
+        search by a portion of the singers field (case insensitive):
+          value: RoHl
+    songRating:
+      in: query
+      name: rating
+      description: Must be an integer between 0 and 10 or a range of rating.
+      schema:
+        type: string
+      examples:
+        search songs with an average rating of 7:
+          value: 7
+          description: Will fetch every song with an average rating from 7.00 to 7.99
+        search songs with an average rating from 4 to 8:
+          value: 4-8
+          description: Will fetch every song with an average rating from 4.00 to 8.00
+    tags:
+      in: query
+      name: tags
+      description: Multiple tags can be specified, comma-delimited
+      style: form
+      explode: false
+      schema:
+        type: string
+      examples:
+        search with one tag:
+          value: electro
+        search with multiple tags:
+          value: electro,french-touch
+    lang:
+      in: query
+      name: lang
+      description: Display error messages in the selected language.
+      schema:
+        type: string
+        default: en
+      examples:
+        english:
+          value: en
+        français:
+          value: fr
+    limit:
+      in: query
+      name: limit
+      description: Limit the results to a set number. Must be a positive integer. If this is set to 0, the API will return the maximum number of results set by its  configuration. Can be combined with skip and sort.
+      style: form
+      schema:
+        type: integer
+        minimum: 0
+      examples:
+        limits the results to five:
+          value: 5
+          description: Up to five results will be returned
+        limit the results by the API config:
+          value: 0
+    skip:
+      in: query
+      name: skip
+      description: Skip the first n-results. Must be a positive integer. Can be combined with limit and sort.
+      style: form
+      schema:
+        type: integer
+        minimum: 0
+      examples:
+        skips the first three results:
+          value: 3
+    albumSort:
+      in: query
+      name: sort
+      description: Sort the results using alphanumeric order. Multiple fields can be specified. Albums can be sorted by title and releaseDate. For reverse alphanumeric order, prefix the selected fields with the minus sign. If not defined, results will be sorted by their default sortField, title. Can be combined with limit and skip.
+      style: form
+      explode: false
+      schema:
+        type: string
+      examples:
+        sort by title, then on reverse chronological order for the releaseDate:
+          value: title,-releaseDate
+    bandSort:
+      in: query
+      name: sort
+      description: Sort the results using alphanumeric order. Multiple fields can be specified. Bands can be sorted by name and formationYear. For reverse alphanumeric order, prefix the selected fields with the minus sign. If not defined, results will be sorted by their default sortField, name. Can be combined with limit and skip.
+      style: form
+      explode: false
+      schema:
+        type: string
+      examples:
+        sort by formationYear, then on reverse alphanumeric order for the name:
+          value: formationYear,-name
+    songSort:
+      in: query
+      name: sort
+      description: Sort the results using alphanumeric order. Multiple fields can be specified. Songs can be sorted by title, position, duration and rating. For reverse alphanumeric order, prefix the selected fields with the minus sign. If not defined, results will be sorted by their default sortField, title. Can be combined with limit and skip.
+      style: form
+      explode: false
+      schema:
+        type: string
+      examples:
+        ? sort by duration, then on reverse alphanumeric order for the title and finally by reverse numeric order for the rating
+        : value: formationYear,-name,-rating
+    songKey:
+      in: path
+      name: songKey
+      description: Either song's _id or code
+      required: true
+      style: simple
+      schema:
+        type: string
+      examples:
+        _id:
+          value: 641da23aae0b20151ffa1a22
+        code:
+          value: 35-hey-johnny-park!
+  requestBodies:
+    albumToCreate:
+      description: |
+        **title**: Required. Will be trimmed. Multiple albums can share the same title, the API will generate an unique property called "code" to dissociate them. \
+        **releaseDate**: Must be a valid date, after "January 01, 1900". YYYY-MM-DD format or a valid javascript Date object. \
+        **type**: Available values : Compilation, EP, Live, Single, Studio \
+        **tags**: Usually music genres associated or any other information used to search this album. Any redondant tag will be deduplicated by the API. \
+        **lang**: *Optional, default `en`. Display error messages in the selected language.*
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/albumToCreate'
+          examples:
+            full info album creation:
+              value:
+                title: 'Wasting Light'
+                releaseDate: '2011-04-12'
+                type: 'Studio'
+                tags: ['post grunge']
+            minimum info album creation:
+              value:
+                title: 'The Colour and the Shape'
+    albumToDelete:
+      description: |
+        **_id** or **code**: Required. _id and code are mutually exclusive, both can't be sent at the same time. Must match the _id or the code provided in the URL. \
+        **title**: Required. Must match the title recorded in the database for confirmation purposes. \
+        **lang**: *Optional, default `en`. Display error messages in the selected language.*
+      required: true
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/albumToDeleteWithId'
+              - $ref: '#/components/schemas/albumToDeleteWithCode'
+          examples:
+            album delete with _id:
+              value:
+                _id: '6411af6f149db318a3ec21c4'
+                title: 'Wasting Light'
+            album delete with code:
+              value:
+                code: '3-the-colour-and-the-shape'
+                title: 'The Colour and the Shape'
+    albumToUpdate:
+      description: |
+        **_id** or **code**: Required. _id and code are mutually exclusive, both can't be sent at the same time. Must match the _id or the code provided in the URL. \
+        **title**: Cannot be empty, will be trimmed. Multiple albums can share the same title, the API will generate an unique property called "code" to dissociate them. \
+        **releaseDate**: Must be a valid date, after "January 01, 1900". YYYY-MM-DD format or a valid javascript Date object. \
+        **type**: Available values : Compilation, EP, Live, Single, Studio \
+        **tags**: Usually music genres associated or any other information used to search this album. Any redondant tag will be deduplicated by the API. \
+        **lang**: *Optional, default `en`. Display error messages in the selected language.*
+      required: true
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/albumToUpdateWithId'
+              - $ref: '#/components/schemas/albumToUpdateWithCode'
+          examples:
+            album update with _id:
+              value:
+                _id: '6411af6f149db318a3ec21c4'
+                title: 'Wasting Light (bonus tracks)'
+                type: 'EP'
+            album update with code:
+              value:
+                code: '3-the-colour-and-the-shape'
+                releaseDate: '1997-05-20'
+    bandToCreate:
+      description: |
+        **name**: Required. Will be trimmed. The band's unique name, two bands cannot share the same name. \
+        **formationYear**: Sometime between 1900 and the current year included. \
+        **bio**: Will be trimmed. \
+        **tags**: Usually music genres associated or any other information used to search this band. Any redondant tag will be deduplicated by the API. \
+        **lang**: *Optional, default `en`. Display error messages in the selected language.*
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/bandToCreate'
+          examples:
+            full info band creation:
+              value:
+                name: 'Foo Fighters'
+                formationYear: 1994
+                bio: "L'histoire commence quand Dave Grohl, ex-membre de Scream, est recruté comme batteur dans un groupe peu connu à l'époque, Nirvana."
+                tags: ['post grunge']
+            minimum info band creation:
+              value:
+                name: 'Foo Fighters'
+    bandToDelete:
+      description: |
+        **_id** or **code**: Required. _id and code are mutually exclusive, both can't be sent at the same time. Must match the _id or the code provided in the URL. \
+        **name**: Required. Must match the name recorded in the database for confirmation purposes. \
+        **cascadeDeleteAlbums**: Boolean. Force delete a band with all its linked albums. If this property is not provided (or set to false), a band with at least one linked album won't be removed unless all of its linked albums are separately deleted. \
+        **lang**: *Optional, default `en`. Display error messages in the selected language.*
+      required: true
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/bandToDeleteWithId'
+              - $ref: '#/components/schemas/bandToDeleteWithCode'
+          examples:
+            band delete with _id:
+              value:
+                _id: '6422ecaf799319ad28530e21'
+                name: 'Foo Fighters'
+            band delete with code:
+              value:
+                code: 'foo-fighters'
+                name: 'Foo Fighters'
+            delete a band with all of its albums:
+              value:
+                _id: '6422ecaf799319ad28530e21'
+                name: 'Foo Fighters'
+                cascadeDeleteAlbums: true
+    bandToUpdate:
+      description: |
+        **_id** or **code**: Required. _id and code are mutually exclusive, both can't be sent at the same time. Must match the _id or the code provided in the URL. \
+        **formationYear**: Sometime between 1900 and the current year included. \
+        **bio**: Will be trimmed. \
+        **tags**: Usually music genres associated or any other information used to search this band. Any redondant tag will be deduplicated by the API. \
+        **lang**: *Optional, default `en`. Display error messages in the selected language.*
+      required: true
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/bandToUpdateWithId'
+              - $ref: '#/components/schemas/bandToUpdateWithCode'
+          examples:
+            band update with _id:
+              value:
+                _id: '6411af6f149db318a3ec21c4'
+                tags: "['alternative rock', 'post grunge']"
+            band update with code:
+              value:
+                code: 'foo-fighters'
+                bio: "Dave Grohl retourne en studio, pour enregistrer d'autres chansons en plus de celles déjà écrites, mais cette fois-ci il le fait sous le nom des Foo Fighters en référence aux chasseurs fantômes."
+    songToCreate:
+      description: |
+        **title**: Required. Cannot be empty, will be trimmed. Multiple songs can share the same title, the API will generate an unique property called "code" to dissociate them. \
+        **position**: Required. Must be a positive integer. Two songs cannot share the same position. \
+        **duration**: Must be in mm:ss format. \
+        **singers**: Will be trimmed. \
+        **lyrics**: Line breaks will be preserved. \
+        **myRating**: Must be an integer between 0 and 10. Used to calculate the average rating of this song. \
+        **lang**: *Optional, default `en`. Display error messages in the selected language.*
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/songToCreate'
+          examples:
+            full info song creation:
+              value:
+                title: 'Everlong'
+                position: 11
+                duration: '4:10'
+                singers: 'Dave Grohl'
+                lyrics: |
+                  Hello, I've waited here for you
+                  Everlong
+                  Tonight, I throw myself into
+                  And out of the red
+                  Out of her head, she sang
+                myRating: 9
+            minimum info song creation:
+              value:
+                title: 'My Hero'
+                position: 7
+    songToDelete:
+      description: |
+        **_id** or **code**: Required. _id and code are mutually exclusive, both can't be sent at the same time. Must match the _id or the code provided in the URL. \
+        **title**: Required. Must match the title recorded in the database for confirmation purposes. \
+        **lang**: *Optional, default `en`. Display error messages in the selected language.*
+      required: true
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/songToDeleteWithId'
+              - $ref: '#/components/schemas/songToDeleteWithCode'
+          examples:
+            song delete with _id:
+              value:
+                _id: '641c4b180d797974ad4178db'
+                title: 'Everlong'
+            song delete with code:
+              value:
+                code: '35-hey-johnny-park!'
+                title: 'Hey, Johnny Park!'
+    songToUpdate:
+      description: |
+        **_id** or **code**: Required. _id and code are mutually exclusive, both can't be sent at the same time. Must match the _id or the code provided in the URL. \
+        **title**: Cannot be empty, will be trimmed. Multiple songs can share the same title, the API will generate an unique property called "code" to dissociate them. \
+        **position**: Must be a positive integer. Two songs cannot share the same position. \
+        **duration**: Must be in mm:ss format. \
+        **singers**: Will be trimmed. \
+        **lyrics**: Line breaks will be preserved. \
+        **myRating**: Must be an integer between 0 and 10. Used to calculate the average rating of this song. \
+        **lang**: *Optional, default `en`. Display error messages in the selected language.*
+      required: true
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/songToUpdateWithId'
+              - $ref: '#/components/schemas/songToUpdateWithCode'
+          examples:
+            song update with _id:
+              value:
+                _id: '641da23aae0b20151ffa1a22'
+                lyrics: |
+                  There goes my hero
+                  Watch him as he goes
+                  There goes my hero
+                  He's ordinary
+                myRating: 8
+            song update with code:
+              value:
+                code: '35-hey-johnny-park!'
+                duration: '4:08'
+  responses:
+    albumCreated:
+      description: Album successfully created
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/returnedAlbum'
+          examples:
+            album created:
+              $ref: '#/components/examples/albumCreated'
+    albumCreationRejected:
+      description: Album creation rejected
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/validationError'
+              - $ref: '#/components/schemas/invalidFieldsError'
+              - $ref: '#/components/schemas/plainError'
+          examples:
+            missing or empty album title:
+              $ref: '#/components/examples/invalidAlbumTitle'
+            releaseDate before January 01, 1900:
+              $ref: '#/components/examples/invalidReleaseDateMin'
+            invalid releaseDate:
+              $ref: '#/components/examples/invalidReleaseDate'
+            invalid album type:
+              $ref: '#/components/examples/invalidAlbumType'
+            invalid fields submitted:
+              $ref: '#/components/examples/invalidFieldsAlbum'
+            invalid JSON submitted:
+              $ref: '#/components/examples/invalidJSON'
+            lang not supported:
+              $ref: '#/components/examples/langNotSupported'
+    albumDeleted:
+      description: Album deleted properly
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/successAndDeletedAlbum'
+          examples:
+            album deleted:
+              $ref: '#/components/examples/albumDeleted'
+    albumDeletionRejected:
+      description: Album deletion rejected
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/validationError'
+              - $ref: '#/components/schemas/errorAndReturnedAlbum'
+              - $ref: '#/components/schemas/plainError'
+          examples:
+            missing albumKey in JSON:
+              $ref: '#/components/examples/missingKey'
+            both albumKeys sent:
+              value:
+                error: Submitted JSON validation failed
+                messages:
+                  - Submitted JSON must contain an _id or a code key, but not both of them
+                  - _id provided in the submitted JSON (6412fb21dca3ac099698572f) and _id found in URL (43-urban-hymns) must match
+                  - 'Provided _id is invalid: 43-urban-hymns'
+            missing album title:
+              $ref: '#/components/examples/missingTitle'
+            mismatching URL albumKey and JSON albumKey:
+              $ref: '#/components/examples/mismatchingId'
+            album has not been recorded with this title:
+              $ref: '#/components/examples/albumTitleMismatch'
+            invalid _id:
+              $ref: '#/components/examples/invalidId'
+            invalid JSON submitted:
+              $ref: '#/components/examples/invalidJSON'
+            lang not supported:
+              $ref: '#/components/examples/langNotSupported'
+    albumFound:
+      description: Album found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/arrayOfReturnedAlbums'
+          examples:
+            album found by albumKey:
+              $ref: '#/components/examples/albumFoundByAlbumKey'
+    albumsFound:
+      description: At least one album found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/arrayOfReturnedAlbums'
+          examples:
+            two albums found with the tags country or funk:
+              $ref: '#/components/examples/albumsFoundByTags'
+    albumNotFound:
+      description: Album not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/plainError'
+          examples:
+            album not found with this _id:
+              $ref: '#/components/examples/noAlbumWithProvidedId'
+            album not found with this code:
+              $ref: '#/components/examples/noAlbumWithProvidedCode'
+    albumOrSongNotFound:
+      description: Album or song not found
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/plainError'
+              - $ref: '#/components/schemas/errorMismatchingAlbum'
+          examples:
+            song not found with this _id:
+              $ref: '#/components/examples/noSongWithProvidedId'
+            song not found with this code:
+              $ref: '#/components/examples/noSongWithProvidedCode'
+            album mismatching:
+              $ref: '#/components/examples/albumMismatch'
+            album not found:
+              $ref: '#/components/examples/noAlbumWithProvidedIdOrCode'
+    albumOrSongSearchNotFound:
+      description: Album or song not found
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/plainError'
+              - $ref: '#/components/schemas/errorWithFilters'
+          examples:
+            song not found:
+              value:
+                error: No song found with the given filters
+                filters:
+                  $or:
+                    - code: 41af1ae07c32e35aeb8250f6
+                    - _id: 41af1ae07c32e35aeb8250f6
+                  $and:
+                    - {}
+            album not found:
+              $ref: '#/components/examples/noAlbumWithProvidedIdOrCode'
+            album mismatching:
+              $ref: '#/components/examples/albumSearchMismatch'
+    albumSearchNotFound:
+      description: Album not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorWithFilters'
+          example:
+            value:
+              error: No album found with the given filters
+              filters:
+                tags:
+                  $in:
+                    - dummy
+    albumSearchRejected:
+      description: Album search rejected
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/plainError'
+              - $ref: '#/components/schemas/invalidFiltersError'
+              - $ref: '#/components/schemas/validationError'
+              - $ref: '#/components/schemas/invalidSortablesError'
+          examples:
+            invalid releaseYear:
+              value:
+                error: releaseYear must be an integer greater than 1900
+            invalid type:
+              $ref: '#/components/examples/invalidAlbumTypeSearch'
+            invalid filters:
+              value:
+                error: Invalid filters found on URL
+                invalidFilters:
+                  - dummy
+                expectedFilters:
+                  - title
+                  - releaseDate
+                  - releaseYear
+                  - type
+                  - tags
+            invalid limit and skip parameters:
+              $ref: '#/components/examples/invalidLimitAndSkip'
+            invalid sort parameters:
+              value:
+                error: Invalid sort fields found on URL
+                invalidSortables:
+                  - dummy
+                expectedSortables:
+                  - title
+                  - releaseDate
+            invalid JSON submitted:
+              $ref: '#/components/examples/invalidJSON'
+            lang not supported:
+              $ref: '#/components/examples/langNotSupported'
+    albumUpdated:
+      description: Album properly updated
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/updatedAlbum'
+          examples:
+            album updated:
+              $ref: '#/components/examples/albumUpdated'
+    albumUpdateRejected:
+      description: Album edition rejected
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/validationError'
+              - $ref: '#/components/schemas/invalidFieldsError'
+              - $ref: '#/components/schemas/plainError'
+          examples:
+            missing albumKey in JSON:
+              $ref: '#/components/examples/missingKey'
+            both albumKeys sent:
+              value:
+                error: Submitted JSON validation failed
+                messages:
+                  - Submitted JSON must contain an _id or a code key, but not both of them
+                  - code provided in the submitted JSON (27-the-fat-of-the-land) and code found in URL (64145a82077b805b8f9ef900) must match
+            mismatching URL albumKey and JSON albumKey:
+              $ref: '#/components/examples/mismatchingId'
+            invalid _id:
+              $ref: '#/components/examples/invalidId'
+            empty album title:
+              $ref: '#/components/examples/invalidAlbumTitle'
+            invalid releaseDate:
+              $ref: '#/components/examples/invalidReleaseDate'
+            releaseDate before January 01, 1900:
+              $ref: '#/components/examples/invalidReleaseDateMin'
+            invalid album type:
+              $ref: '#/components/examples/invalidAlbumType'
+            invalid fields submitted:
+              $ref: '#/components/examples/invalidFieldsAlbum'
+            invalid JSON submitted:
+              $ref: '#/components/examples/invalidJSON'
+            lang not supported:
+              $ref: '#/components/examples/langNotSupported'
+    bandCreated:
+      description: Band successfully created
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/returnedBand'
+          examples:
+            band created:
+              $ref: '#/components/examples/bandCreated'
+    bandCreationRejected:
+      description: Band creation rejected
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/validationError'
+              - $ref: '#/components/schemas/invalidFieldsError'
+              - $ref: '#/components/schemas/errorAndReturnedBand'
+              - $ref: '#/components/schemas/plainError'
+          examples:
+            duplicate band name:
+              value:
+                error: A band with the same name had already been recorded
+                band:
+                  tags: []
+                  albums: []
+                  _id: 6408697803821220ffb8648b
+                  name: Phoenix
+                  created: '2023-03-08T10:54:48.670Z'
+                  updated: '2023-03-08T10:54:48.670Z'
+                  code: phoenix
+                  version: 0
+            invalid fields submitted:
+              $ref: '#/components/examples/invalidFieldsBand'
+            nameless band submitted:
+              $ref: '#/components/examples/invalidBandName'
+            formationYear not an integer:
+              $ref: '#/components/examples/invalidFormationYearNotInteger'
+            formationYear before 1900:
+              $ref: '#/components/examples/invalidFormationYearMin'
+            formationYear in the future:
+              $ref: '#/components/examples/invalidFormationYearMax'
+            invalid JSON submitted:
+              $ref: '#/components/examples/invalidJSON'
+            lang not supported:
+              $ref: '#/components/examples/langNotSupported'
+    bandDeleted:
+      description: Band deleted properly
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/successAndDeletedBand'
+          example:
+            success: Band deleted properly
+            deleted:
+              tags:
+                - electro
+              albums: []
+              _id: 6409c12f92983261364f9253
+              name: The Chemical Brothers
+              formationYear: 1992
+              bio: Initialement appelé The Dust Brothers, le groupe Chemical Brothers est fondé par Tom Rowlands et Ed Simons.
+              created: '2023-03-09T11:21:19.582Z'
+              updated: '2023-03-09T11:21:19.582Z'
+              code: the-chemical-brothers
+              version: 0
+    bandDeletionRejected:
+      description: Band deletion rejected
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/validationError'
+              - $ref: '#/components/schemas/errorAndReturnedBand'
+              - $ref: '#/components/schemas/plainError'
+          examples:
+            missing bandKey:
+              $ref: '#/components/examples/missingKey'
+            both bandKeys sent:
+              value:
+                error: Submitted JSON validation failed
+                messages:
+                  - Submitted JSON must contain an _id or a code key, but not both of them
+                  - code provided in the submitted JSON (the-chemical-brothers) and code found in URL (6409c5fe53c29c662031077b) must match
+            missing band name:
+              value:
+                error: Submitted JSON validation failed
+                messages:
+                  - Submitted JSON must contain a name key
+            mismatching URL bandKey and JSON bandKey:
+              value:
+                error: Submitted JSON validation failed
+                messages:
+                  - code provided in the submitted JSON (dummy) and code found in URL (the-chemical-brothers) must match
+            band has not been recorded with this name:
+              value:
+                error: Band recorded with the provided _id (6409c5fe53c29c662031077f) has not been recorded with this name
+                band:
+                  tags:
+                    - electro
+                  albums: []
+                  _id: 6409c5fe53c29c662031077f
+                  name: The Chemical Brothers
+                  formationYear: 1992
+                  bio: Initialement appelé The Dust Brothers, le groupe Chemical Brothers est fondé par Tom Rowlands et Ed Simons.
+                  created: '2023-03-09T11:41:50.941Z'
+                  updated: '2023-03-09T11:41:50.941Z'
+                  code: the-chemical-brothers
+                  version: 0
+            invalid _id:
+              $ref: '#/components/examples/invalidId'
+            invalid JSON submitted:
+              $ref: '#/components/examples/invalidJSON'
+            lang not supported:
+              $ref: '#/components/examples/langNotSupported'
+    bandDeletionWithLinkedAlbums:
+      description: Can't delete a band with linked albums
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/validationErrorAndReturnedBand'
+          example:
+            error: Band linked to some albums
+            message: 'To delete this band and all of its linked albums, you can set { "cascadeDeleteAlbums" : true } in your JSON'
+            linkedAlbums:
+              - tags:
+                  - Array
+                songs: []
+                _id: 6409c5fe53c29c6620310784
+                title: Surrender
+                releaseDate: '1999-06-21T00:00:00.000Z'
+                type: Studio
+                code: 1-surrender
+    bandOrAlbumSearchNotFound:
+      description: Band or album not found
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/errorWithFilters'
+              - $ref: '#/components/schemas/errorMismatchingBand'
+          examples:
+            album not found:
+              value:
+                error: No album found with the given filters
+                filters:
+                  $or:
+                    - code: 41af1ae07c32e35aeb8250f6
+                    - _id: 41af1ae07c32e35aeb8250f6
+                  $and:
+                    - {}
+            band not found:
+              $ref: '#/components/examples/noBandWithProvidedIdOrCode'
+            band mismatching:
+              $ref: '#/components/examples/bandSearchMismatch'
+    bandOrAlbumOrSongSearchNotFound:
+      description: Band, album or song not found
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/plainError'
+              - $ref: '#/components/schemas/errorWithFilters'
+          examples:
+            song not found:
+              value:
+                error: No song found with the given filters
+                filters:
+                  $or:
+                    - code: 41af1ae07c32e35aeb8250f6
+                    - _id: 41af1ae07c32e35aeb8250f6
+                  $and:
+                    - {}
+            album not found:
+              $ref: '#/components/examples/noAlbumWithProvidedIdOrCode'
+            band not found:
+              $ref: '#/components/examples/noBandWithProvidedIdOrCode'
+            band or album mismatching:
+              $ref: '#/components/examples/albumSearchMismatch'
+    bandOrAlbumNotFound:
+      description: Band or album not found
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/plainError'
+              - $ref: '#/components/schemas/errorMismatchingBand'
+          examples:
+            album not found with this _id:
+              $ref: '#/components/examples/noAlbumWithProvidedId'
+            album not found with this code:
+              $ref: '#/components/examples/noAlbumWithProvidedCode'
+            band not found:
+              $ref: '#/components/examples/noBandWithProvidedIdOrCode'
+            band mismatching:
+              $ref: '#/components/examples/bandMismatch'
+    bandOrAlbumOrSongNotFound:
+      description: Band, album or song not found
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/plainError'
+              - $ref: '#/components/schemas/errorMismatchingAlbum'
+              - $ref: '#/components/schemas/errorMismatchingBand'
+          examples:
+            song not found with this _id:
+              $ref: '#/components/examples/noSongWithProvidedId'
+            song not found with this code:
+              $ref: '#/components/examples/noSongWithProvidedCode'
+            album mismatching:
+              $ref: '#/components/examples/albumMismatch'
+            band mismatching:
+              $ref: '#/components/examples/bandMismatch'
+            album not found:
+              $ref: '#/components/examples/noAlbumWithProvidedIdOrCode'
+            band not found:
+              $ref: '#/components/examples/noBandWithProvidedIdOrCode'
+    bandFound:
+      description: Band found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/arrayOfReturnedBands'
+          examples:
+            band found by bandKey:
+              $ref: '#/components/examples/bandFoundByBandKey'
+    bandsFound:
+      description: At least one band found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/arrayOfReturnedBands'
+          examples:
+            band found by bandKey:
+              $ref: '#/components/examples/bandFoundByBandKey'
+            two bands found by formationYear:
+              value:
+                - tags:
+                    - french-touch
+                  albums: []
+                  _id: 640f0949a63bb88d9224fef4
+                  name: Air
+                  formationYear: 1996
+                  created: '2023-03-13T11:30:17.190Z'
+                  updated: '2023-03-13T11:30:17.190Z'
+                  code: air
+                  version: 0
+                - tags:
+                    - french-touch
+                  albums: []
+                  _id: 640f0949a63bb88d9224fef6
+                  name: Cassius
+                  formationYear: 1996
+                  created: '2023-03-13T11:30:17.194Z'
+                  updated: '2023-03-13T11:30:17.194Z'
+                  code: cassius
+                  version: 0
+    bandNotFound:
+      description: Band not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/plainError'
+          example:
+            error: 'No band recorded with the provided code: he-chemical-brotherst'
+    bandSearchRejected:
+      description: Band search rejected
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/invalidNumericFields'
+              - $ref: '#/components/schemas/invalidFiltersError'
+              - $ref: '#/components/schemas/validationError'
+              - $ref: '#/components/schemas/invalidSortablesError'
+              - $ref: '#/components/schemas/plainError'
+          examples:
+            invalid formationYear:
+              value:
+                error: Invalid numeric values
+                invalidNumericFilters:
+                  formationYear: dummy
+            invalid filters:
+              value:
+                error: Invalid filters found on URL
+                invalidFilters:
+                  - dummy
+                expectedFilters:
+                  - name
+                  - formationYear
+                  - tags
+            invalid limit and skip parameters:
+              $ref: '#/components/examples/invalidLimitAndSkip'
+            invalid sort parameters:
+              value:
+                error: Invalid sort fields found on URL
+                invalidSortables:
+                  - dummy
+                expectedSortables:
+                  - name
+                  - formationYear
+            invalid JSON submitted:
+              $ref: '#/components/examples/invalidJSON'
+            lang not supported:
+              $ref: '#/components/examples/langNotSupported'
+    bandSearchNotFound:
+      description: Band not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorWithFilters'
+          example:
+            error: No band found with the given filters
+            filters:
+              $or:
+                - code: dummy
+              $and:
+                - {}
+    bandUpdated:
+      description: Band properly updated
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/updatedBand'
+          example:
+            updatedBand:
+              tags:
+                - electro
+                - trip-hop
+              albums: []
+              _id: 640afb23ba390301ce659401
+              name: Gorillaz without Murdoc
+              formationYear: 2018
+              bio: 2D, Ace, Russel, Noodle
+              created: '2023-03-10T09:40:51.960Z'
+              updated: '2023-03-10T09:40:51.963Z'
+              code: gorillaz-without-murdoc
+              version: 1
+            originalBand:
+              tags:
+                - electro
+              albums: []
+              _id: 640afb23ba390301ce659401
+              name: Gorillaz
+              formationYear: 1998
+              bio: 2D, Murdoc, Russel, Noodle
+              created: '2023-03-10T09:40:51.960Z'
+              updated: '2023-03-10T09:40:51.960Z'
+              code: gorillaz
+              version: 0
+    bandUpdateRejected:
+      description: Band edition rejected
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/validationError'
+              - $ref: '#/components/schemas/errorAndReturnedBand'
+              - $ref: '#/components/schemas/plainError'
+          examples:
+            missing bandKey:
+              $ref: '#/components/examples/missingKey'
+            both bandKeys Sent:
+              value:
+                error: Submitted JSON validation failed
+                messages:
+                  - Submitted JSON must contain an _id or a code key, but not both of them
+                  - code provided in the submitted JSON (gorillaz) and code found in URL (640b04a55437ae0d5b567622) must match
+            mismatching URL bandKey and JSON bandKey:
+              $ref: '#/components/examples/mismatchingId'
+            invalid _id:
+              $ref: '#/components/examples/invalidId'
+            invalid fields submitted:
+              $ref: '#/components/examples/invalidFieldsBand'
+            empty band name:
+              $ref: '#/components/examples/invalidBandName'
+            formationYear not an integer:
+              $ref: '#/components/examples/invalidFormationYearNotInteger'
+            formationYear before 1900:
+              $ref: '#/components/examples/invalidFormationYearMin'
+            formationYear in the future:
+              $ref: '#/components/examples/invalidFormationYearMax'
+            invalid JSON submitted:
+              $ref: '#/components/examples/invalidJSON'
+            lang not supported:
+              $ref: '#/components/examples/langNotSupported'
+    songCreated:
+      description: Song successfully created
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/returnedSong'
+          examples:
+            song created:
+              $ref: '#/components/examples/songCreated'
+    songCreationRejected:
+      description: Song creation rejected
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/validationError'
+              - $ref: '#/components/schemas/invalidFieldsError'
+              - $ref: '#/components/schemas/duplicateSongPositionError'
+              - $ref: '#/components/schemas/plainError'
+          examples:
+            missing or empty song title:
+              $ref: '#/components/examples/invalidSongTitle'
+            missing song position:
+              value:
+                error: Submitted song validation failed
+                messages:
+                  - A song must have a position in the album
+            duplicate song position:
+              $ref: '#/components/examples/duplicateSongPosition'
+            invalid song position:
+              $ref: '#/components/examples/invalidPosition'
+            invalid song duration:
+              $ref: '#/components/examples/invalidDuration'
+            invalid song myRating:
+              $ref: '#/components/examples/invalidMyRating'
+            invalid fields submitted:
+              $ref: '#/components/examples/invalidFieldsSong'
+            invalid JSON submitted:
+              $ref: '#/components/examples/invalidJSON'
+            lang not supported:
+              $ref: '#/components/examples/langNotSupported'
+    songDeleted:
+      description: Song deleted properly
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/successAndDeletedSong'
+          examples:
+            song deleted:
+              $ref: '#/components/examples/songDeleted'
+    songDeletionRejected:
+      description: Song deletion rejected
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/validationError'
+              - $ref: '#/components/schemas/errorAndReturnedSong'
+              - $ref: '#/components/schemas/plainError'
+          examples:
+            missing songKey in JSON:
+              $ref: '#/components/examples/missingKey'
+            both songKeys sent:
+              value:
+                error: Submitted JSON validation failed
+                messages:
+                  - Submitted JSON must contain an _id or a code key, but not both of them
+                  - _id provided in the submitted JSON (641da66cf8c1b819feaf91a6) and _id found in URL (23-tout-doit-disparaitre) must match
+                  - 'Provided _id is invalid: 23-tout-doit-disparaitre'
+            missing song title:
+              $ref: '#/components/examples/missingTitle'
+            mismatching URL songKey and JSON songKey:
+              value:
+                error: Submitted JSON validation failed
+                messages:
+                  - code provided in the submitted JSON (dummy) and code found in URL (23-tout-doit-disparaitre) must match
+            song has not been recorded with this title:
+              $ref: '#/components/examples/songTitleMismatch'
+            invalid _id:
+              $ref: '#/components/examples/invalidId'
+            invalid JSON submitted:
+              $ref: '#/components/examples/invalidJSON'
+            lang not supported:
+              $ref: '#/components/examples/langNotSupported'
+    songFound:
+      description: Song found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/arrayOfReturnedSongs'
+          examples:
+            song found by songKey:
+              $ref: '#/components/examples/songFoundBySongKey'
+    songNotFound:
+      description: Song not found
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/plainError'
+          examples:
+            song not found with this _id:
+              $ref: '#/components/examples/noSongWithProvidedId'
+            song not found with this code:
+              $ref: '#/components/examples/noSongWithProvidedCode'
+    songSearchNotFound:
+      description: Song not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorWithFilters'
+          example:
+            value:
+              error: No song found with the given filters
+              filters:
+                $or:
+                  - code: 64219e8527bc069181910346
+                  - _id: 64219e8527bc069181910346
+                $and:
+                  - title: {}
+    songsSearchNotFound:
+      description: Song not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorWithFilters'
+          example:
+            value:
+              error: No song found with the given filters
+              filters:
+                title: {}
+    songSearchRejected:
+      description: Song search rejected
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/plainError'
+              - $ref: '#/components/schemas/invalidRangeFields'
+              - $ref: '#/components/schemas/invalidNumericFields'
+              - $ref: '#/components/schemas/invalidFiltersError'
+              - $ref: '#/components/schemas/validationError'
+              - $ref: '#/components/schemas/invalidSortablesError'
+          examples:
+            invalid rating:
+              value:
+                error: rating must be an integer between 0 and 10 or a valid min-max range (with min and max between 0 and 10)
+            invalid rating range:
+              value:
+                error: Invalid range values
+                invalidRangeFilters:
+                  rating: 6-3
+            invalid duration:
+              value:
+                error: Invalid numeric values
+                invalidNumericFilters:
+                  duration: 3minutes
+            duration not a positive integer:
+              value:
+                error: duration must be a positive integer
+            invalid filters:
+              value:
+                error: Invalid filters found on URL
+                invalidFilters:
+                  - dummy
+                expectedFilters:
+                  - title
+                  - duration
+                  - singers
+                  - rating
+            invalid limit and skip parameters:
+              $ref: '#/components/examples/invalidLimitAndSkip'
+            invalid sort parameters:
+              value:
+                error: Invalid sort fields found on URL
+                invalidSortables:
+                  - dummy
+                expectedSortables:
+                  - title
+                  - position
+                  - duration
+                  - rating
+            invalid JSON submitted:
+              $ref: '#/components/examples/invalidJSON'
+            lang not supported:
+              $ref: '#/components/examples/langNotSupported'
+    songUpdated:
+      description: Song properly updated
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/updatedSong'
+          examples:
+            song updated:
+              $ref: '#/components/examples/songUpdated'
+    songUpdateRejected:
+      description: Song edition rejected
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/validationError'
+              - $ref: '#/components/schemas/invalidFieldsError'
+              - $ref: '#/components/schemas/duplicateSongPositionError'
+              - $ref: '#/components/schemas/plainError'
+          examples:
+            missing songKey in JSON:
+              $ref: '#/components/examples/missingKey'
+            both songKeys sent:
+              value:
+                error: Submitted JSON validation failed
+                messages:
+                  - Submitted JSON must contain an _id or a code key, but not both of them
+                  - code provided in the submitted JSON (20-wasting-my-young-years) and code found in URL (641ee9b6677ce858ae7c29f6) must match
+            mismatching URL songKey and JSON songKey:
+              $ref: '#/components/examples/mismatchingId'
+            invalid _id:
+              $ref: '#/components/examples/invalidId'
+            empty song title:
+              $ref: '#/components/examples/invalidSongTitle'
+            duplicate song position:
+              $ref: '#/components/examples/duplicateSongPosition'
+            invalid song position:
+              $ref: '#/components/examples/invalidPosition'
+            invalid song duration:
+              $ref: '#/components/examples/invalidDuration'
+            invalid song myRating:
+              $ref: '#/components/examples/invalidMyRating'
+            invalid fields submitted:
+              $ref: '#/components/examples/invalidFieldsSong'
+            invalid JSON submitted:
+              $ref: '#/components/examples/invalidJSON'
+            lang not supported:
+              $ref: '#/components/examples/langNotSupported'
+    serverSideError:
+      description: Server-side error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/plainError'
+          examples:
+            db connection error:
+              $ref: '#/components/examples/dbConnectionError'
+    serverSideErrorOnBandDeletion:
+      description: Server-side error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/plainError'
+          examples:
+            db connection error:
+              $ref: '#/components/examples/dbConnectionError'
+            deletionError:
+              value:
+                error: Band deletion failed
+  examples:
+    albumCreated:
+      value:
+        tags:
+          - alternative-rock
+          - electropop
+        songs: []
+        _id: 6411af6f149db318a3ec21c4
+        title: Trench
+        releaseDate: '2018-10-05T00:00:00.000Z'
+        type: Studio
+        band:
+          tags:
+            - indie-pop
+            - rap-rock
+          albums:
+            - tags: []
+              songs: []
+              _id: 6411af6f149db318a3ec21c2
+              title: Blurryface
+              code: 2-blurryface
+            - tags:
+                - alternative-rock
+                - electropop
+              songs: []
+              _id: 6411af6f149db318a3ec21c4
+              title: Trench
+              releaseDate: '2018-10-05T00:00:00.000Z'
+              type: Studio
+              code: 3-trench
+          _id: 6411af6f149db318a3ec21be
+          name: twenty øne piløts
+          formationYear: 2009
+          bio: Twenty One Pilots (stylisé twenty øne piløts), est un groupe américain de musique indie rock, originaire de Columbus dans l'Ohio, composé autour de deux multi-instrumentistes accomplis, Tyler Joseph et Josh Dun.
+          created: '2023-03-15T11:43:43.475Z'
+          updated: '2023-03-15T11:43:43.533Z'
+          code: twenty-one-pilots
+          version: 2
+        created: '2023-03-15T11:43:43.528Z'
+        updated: '2023-03-15T11:43:43.528Z'
+        code: 3-trench
+        version: 0
+    albumDeleted:
+      value:
+        success: Album deleted properly
+        deleted:
+          tags:
+            - britpop
+            - alternative-rock
+          songs: []
+          _id: 6412f4442422ea009c42d951
+          title: Urban Hymns
+          releaseDate: '1997-09-29T00:00:00.000Z'
+          type: Studio
+          band:
+            tags:
+              - alternative-rock
+            albums:
+              - tags:
+                  - psychedelic-rock
+                songs: []
+                _id: 6412f4442422ea009c42d94d
+                title: A Storm in Heaven
+                releaseDate: '1993-06-21T00:00:00.000Z'
+                code: 42-a-storm-in-heaven
+              - tags:
+                  - psychedelic-rock
+                songs: []
+                _id: 6412f4442422ea009c42d94f
+                title: A Northern Soul
+                releaseDate: '1995-06-20T00:00:00.000Z'
+                code: 43-a-northern-soul
+            _id: 6412f4442422ea009c42d94b
+            name: The Verve
+            formationYear: 1990
+            bio: Longtemps considéré comme un des groupes les plus innovants et captivants de la scène pop contemporaine britannique, The Verve fit finalement surface en 1997 avec le tube Bitter Sweet Symphony.
+            created: '2023-03-16T10:49:40.104Z'
+            updated: '2023-03-16T10:49:40.138Z'
+            code: the-verve
+            version: 3
+          created: '2023-03-16T10:49:40.133Z'
+          updated: '2023-03-16T10:49:40.133Z'
+          code: 43-urban-hymns
+          version: 0
+    albumMismatch:
+      value:
+        error: Album found with the provided key 641da9a77b4dc41e1a9f7fd8 and related album are mismatching
+        relatedAlbum:
+          tags:
+            - house
+          songs:
+            - _id: 641da9a77b4dc41e1a9f7fda
+              title: Le patron est devenu fou
+              position: 1
+              duration: '10:07'
+              code: 22-le-patron-est-devenu-fou
+              rating: null
+            - _id: 641da9a77b4dc41e1a9f7fdc
+              title: Prix choc
+              position: 2
+              duration: '08:52'
+              code: 23-prix-choc
+              rating: null
+            - _id: 641da9a87b4dc41e1a9f800a
+              title: Tout Doit Disparaître
+              position: 6
+              code: 23-tout-doit-disparaitre
+              rating: null
+              duration: null
+          _id: 641da9a77b4dc41e1a9f7fd6
+          title: Super Discount
+          releaseDate: '1996-10-16T00:00:00.000Z'
+          type: Studio
+          band:
+            tags:
+              - french-touch
+            albums:
+              - tags:
+                  - house
+                songs:
+                  - _id: 641da9a77b4dc41e1a9f7fda
+                    title: Le patron est devenu fou
+                    position: 1
+                    duration: '10:07'
+                    code: 22-le-patron-est-devenu-fou
+                    rating: null
+                  - _id: 641da9a77b4dc41e1a9f7fdc
+                    title: Prix choc
+                    position: 2
+                    duration: '08:52'
+                    code: 23-prix-choc
+                    rating: null
+                  - _id: 641da9a87b4dc41e1a9f800a
+                    title: Tout Doit Disparaître
+                    position: 6
+                    code: 23-tout-doit-disparaitre
+                    rating: null
+                    duration: null
+                _id: 641da9a77b4dc41e1a9f7fd6
+                title: Super Discount
+                releaseDate: '1996-10-16T00:00:00.000Z'
+                type: Studio
+                code: 1-super-discount
+              - tags: []
+                songs: []
+                _id: 641da9a77b4dc41e1a9f7fd8
+                title: Super Discount 2
+                code: 2-super-discount-2
+            _id: 641da9a77b4dc41e1a9f7fd4
+            name: Etienne de Crécy
+            formationYear: 1992
+            bio: Avec Super Discount en 1996, Etienne de Crécy contribue grandement à populariser la French touch.
+            created: '2023-03-24T13:46:15.425Z'
+            updated: '2023-03-24T13:46:15.442Z'
+            code: etienne-de-crecy
+            version: 2
+          created: '2023-03-24T13:46:15.430Z'
+          updated: '2023-03-24T13:46:16.209Z'
+          code: 1-super-discount
+          version: 29
+        providedAlbum:
+          tags: []
+          songs: []
+          _id: 641da9a77b4dc41e1a9f7fd8
+          title: Super Discount 2
+          band:
+            tags:
+              - french-touch
+            albums:
+              - tags:
+                  - house
+                songs:
+                  - _id: 641da9a77b4dc41e1a9f7fda
+                    title: Le patron est devenu fou
+                    position: 1
+                    duration: '10:07'
+                    code: 22-le-patron-est-devenu-fou
+                    rating: null
+                  - _id: 641da9a77b4dc41e1a9f7fdc
+                    title: Prix choc
+                    position: 2
+                    duration: '08:52'
+                    code: 23-prix-choc
+                    rating: null
+                  - _id: 641da9a87b4dc41e1a9f800a
+                    title: Tout Doit Disparaître
+                    position: 6
+                    code: 23-tout-doit-disparaitre
+                    rating: null
+                    duration: null
+                _id: 641da9a77b4dc41e1a9f7fd6
+                title: Super Discount
+                releaseDate: '1996-10-16T00:00:00.000Z'
+                type: Studio
+                code: 1-super-discount
+              - tags: []
+                songs: []
+                _id: 641da9a77b4dc41e1a9f7fd8
+                title: Super Discount 2
+                code: 2-super-discount-2
+            _id: 641da9a77b4dc41e1a9f7fd4
+            name: Etienne de Crécy
+            formationYear: 1992
+            bio: Avec Super Discount en 1996, Etienne de Crécy contribue grandement à populariser la French touch.
+            created: '2023-03-24T13:46:15.425Z'
+            updated: '2023-03-24T13:46:15.442Z'
+            code: etienne-de-crecy
+            version: 2
+          created: '2023-03-24T13:46:15.440Z'
+          updated: '2023-03-24T13:46:15.440Z'
+          code: 2-super-discount-2
+          version: 0
+    albumFoundByAlbumKey:
+      value:
+        - tags:
+            - funk
+            - disco
+            - electro
+            - house
+            - edm
+          songs: []
+          _id: 641ae6cf35ed062953a2dafc
+          title: Funk Wav Bounces Vol. 1
+          releaseDate: '2017-06-30T00:00:00.000Z'
+          type: Studio
+          band:
+            tags:
+              - house
+            albums:
+              - tags:
+                  - electro
+                  - edm
+                songs: []
+                _id: 641ae6cf35ed062953a2daf4
+                title: I Created Disco
+                releaseDate: '2007-06-15T00:00:00.000Z'
+                type: Studio
+                code: 8-i-created-disco
+              - tags:
+                  - electro
+                  - edm
+                songs: []
+                _id: 641ae6cf35ed062953a2daf6
+                title: 18 Months
+                releaseDate: '2014-10-31T00:00:00.000Z'
+                type: Studio
+                code: 9-18-months
+              - tags:
+                  - edm
+                songs: []
+                _id: 641ae6cf35ed062953a2daf8
+                title: Motion (Deluxe)
+                releaseDate: '2014-10-31T00:00:00.000Z'
+                type: Studio
+                code: 10-motion-(deluxe)
+              - tags:
+                  - electro
+                songs: []
+                _id: 641ae6cf35ed062953a2dafa
+                title: Ready for the Weekend
+                releaseDate: '2009-08-14T00:00:00.000Z'
+                type: Studio
+                code: 11-ready-for-the-weekend
+              - tags:
+                  - funk
+                  - disco
+                  - electro
+                  - house
+                  - edm
+                songs: []
+                _id: 641ae6cf35ed062953a2dafc
+                title: Funk Wav Bounces Vol. 1
+                releaseDate: '2017-06-30T00:00:00.000Z'
+                type: Studio
+                code: 12-funk-wav-bounces-vol.-1
+            _id: 641ae6cf35ed062953a2daf3
+            name: Calvin Harris
+            formationYear: 2002
+            bio: Calvin Harris sort en 2007 son premier album I Created Disco, qui deviendra disque d'or au Royaume-Uni
+            created: '2023-03-22T11:30:23.477Z'
+            updated: '2023-03-22T11:30:23.537Z'
+            code: calvin-harris
+            version: 5
+          created: '2023-03-22T11:30:23.533Z'
+          updated: '2023-03-22T11:30:23.533Z'
+          code: 12-funk-wav-bounces-vol.-1
+          version: 0
+    albumsFoundByTags:
+      value:
+        - tags:
+            - funk
+            - disco
+            - electro
+            - house
+            - edm
+          songs: []
+          _id: 641afbf242a22d40ac3a3b5d
+          title: Funk Wav Bounces Vol. 1
+          releaseDate: '2017-06-30T00:00:00.000Z'
+          type: Studio
+          band:
+            tags:
+              - house
+            albums:
+              - tags:
+                  - electro
+                  - edm
+                songs: []
+                _id: 641afbf242a22d40ac3a3b55
+                title: I Created Disco
+                releaseDate: '2007-06-15T00:00:00.000Z'
+                type: Studio
+                code: 8-i-created-disco
+              - tags:
+                  - electro
+                  - edm
+                songs: []
+                _id: 641afbf242a22d40ac3a3b57
+                title: 18 Months
+                releaseDate: '2014-10-31T00:00:00.000Z'
+                type: Studio
+                code: 9-18-months
+              - tags:
+                  - edm
+                songs: []
+                _id: 641afbf242a22d40ac3a3b59
+                title: Motion (Deluxe)
+                releaseDate: '2014-10-31T00:00:00.000Z'
+                type: Studio
+                code: 10-motion-(deluxe)
+              - tags:
+                  - electro
+                songs: []
+                _id: 641afbf242a22d40ac3a3b5b
+                title: Ready for the Weekend
+                releaseDate: '2009-08-14T00:00:00.000Z'
+                type: Studio
+                code: 11-ready-for-the-weekend
+              - tags:
+                  - funk
+                  - disco
+                  - electro
+                  - house
+                  - edm
+                songs: []
+                _id: 641afbf242a22d40ac3a3b5d
+                title: Funk Wav Bounces Vol. 1
+                releaseDate: '2017-06-30T00:00:00.000Z'
+                type: Studio
+                code: 12-funk-wav-bounces-vol.-1
+            _id: 641afbf242a22d40ac3a3b54
+            name: Calvin Harris
+            formationYear: 2002
+            bio: Calvin Harris sort en 2007 son premier album I Created Disco, qui deviendra disque d'or au Royaume-Uni
+            created: '2023-03-22T13:00:34.453Z'
+            updated: '2023-03-22T13:00:34.517Z'
+            code: calvin-harris
+            version: 5
+          created: '2023-03-22T13:00:34.514Z'
+          updated: '2023-03-22T13:00:34.514Z'
+          code: 12-funk-wav-bounces-vol.-1
+          version: 0
+        - tags:
+            - house
+            - country
+          songs: []
+          _id: 641afbf242a22d40ac3a3b62
+          title: 'True'
+          releaseDate: '2013-09-13T00:00:00.000Z'
+          type: Studio
+          band:
+            tags:
+              - electro
+              - house
+            albums:
+              - tags:
+                  - electro
+                songs: []
+                _id: 641afbf242a22d40ac3a3b60
+                title: True (Avicii by Avicii)
+                releaseDate: '2014-03-24T00:00:00.000Z'
+                type: Studio
+                code: 13-true-(avicii-by-avicii)
+              - tags:
+                  - house
+                  - country
+                songs: []
+                _id: 641afbf242a22d40ac3a3b62
+                title: 'True'
+                releaseDate: '2013-09-13T00:00:00.000Z'
+                type: Studio
+                code: 14-true
+              - tags:
+                  - house
+                songs: []
+                _id: 641afbf242a22d40ac3a3b64
+                title: Stories (Deluxe)
+                releaseDate: '2013-09-13T00:00:00.000Z'
+                type: Studio
+                code: 15-stories-(deluxe)
+              - tags:
+                  - house
+                songs: []
+                _id: 641afbf242a22d40ac3a3b66
+                title: The Days / Nights EP
+                releaseDate: '2014-12-01T00:00:00.000Z'
+                type: EP
+                code: 16-the-days-nights-ep
+              - tags:
+                  - house
+                songs: []
+                _id: 641afbf242a22d40ac3a3b68
+                title: Avīci (01)
+                releaseDate: '2017-08-10T00:00:00.000Z'
+                type: EP
+                code: 17-avici-(01)
+            _id: 641afbf242a22d40ac3a3b5f
+            name: Avicii
+            formationYear: 2011
+            bio: Avicii, considéré comme l'un des plus grands DJ de sa génération, sort son premier album True en septembre 2013 qui établit sa réputation dans le monde de la house et de la dance.
+            created: '2023-03-22T13:00:34.526Z'
+            updated: '2023-03-22T13:00:34.586Z'
+            code: avicii
+            version: 5
+          created: '2023-03-22T13:00:34.540Z'
+          updated: '2023-03-22T13:00:34.540Z'
+          code: 14-true
+          version: 0
+    albumSearchMismatch:
+      value:
+        error: No song found with the given filters
+        filters:
+          $or:
+            - code: 20-swept-away-(edit)
+          $and:
+            - album:
+                tags:
+                  - indie-pop
+                songs:
+                  - _id: 642196c542941d8915d0f907
+                    title: Kangaroo Court
+                    position: 3
+                    duration: '03:43'
+                    singers: Ryan Merchant, Sebu Simonian
+                    code: 11-kangaroo-court
+                    rating: null
+                  - _id: 642196c542941d8915d0f909
+                    title: I Sold My Bed, But Not My Stereo (radio edit)
+                    position: 4
+                    duration: '08:54'
+                    rating: '5.00'
+                    code: 12-i-sold-my-bed-but-not-my-stereo-(radio-edit)
+                  - _id: 642196c542941d8915d0f90b
+                    title: Origami
+                    position: 8
+                    duration: '03:45'
+                    rating: '4.00'
+                    code: 13-origami
+                _id: 642196c542941d8915d0f903
+                title: In a Tidal Wave of Mystery
+                releaseDate: '2013-06-04T00:00:00.000Z'
+                type: Studio
+                band:
+                  tags:
+                    - indie-pop
+                    - synth-pop
+                    - indietronica
+                  albums:
+                    - tags:
+                        - indie-pop
+                      songs:
+                        - _id: 642196c542941d8915d0f907
+                          title: Kangaroo Court
+                          position: 3
+                          duration: '03:43'
+                          singers: Ryan Merchant, Sebu Simonian
+                          code: 11-kangaroo-court
+                          rating: null
+                        - _id: 642196c542941d8915d0f909
+                          title: I Sold My Bed, But Not My Stereo (radio edit)
+                          position: 4
+                          duration: '08:54'
+                          rating: '5.00'
+                          code: 12-i-sold-my-bed-but-not-my-stereo-(radio-edit)
+                        - _id: 642196c542941d8915d0f90b
+                          title: Origami
+                          position: 8
+                          duration: '03:45'
+                          rating: '4.00'
+                          code: 13-origami
+                      _id: 642196c542941d8915d0f903
+                      title: In a Tidal Wave of Mystery
+                      releaseDate: '2013-06-04T00:00:00.000Z'
+                      type: Studio
+                      code: 1-in-a-tidal-wave-of-mystery
+                    - tags:
+                        - synth-pop
+                      songs:
+                        - _id: 642196c542941d8915d0f90d
+                          title: Swimming Pool Summer
+                          position: 2
+                          duration: '08:33'
+                          singers: '?'
+                          code: 14-swimming-pool-summer
+                          rating: null
+                        - _id: 642196c542941d8915d0f90f
+                          title: Drop Everything (radio edit)
+                          position: 6
+                          duration: '03:10'
+                          singers: Ryan Merchant, Sebu Simonian
+                          rating: '9.00'
+                          code: 15-drop-everything-(radio-edit)
+                      _id: 642196c542941d8915d0f905
+                      title: Solarize
+                      releaseDate: '2018-08-10T00:00:00.000Z'
+                      type: Studio
+                      code: 2-solarize
+                  _id: 642196c542941d8915d0f902
+                  name: Capital Cities
+                  formationYear: 2010
+                  bio: Capital Cities a débuté en écrivant des jingles commerciaux avant d'orienter ses talents de compositeurs brillants et accrocheurs vers le monde de la pop.
+                  created: '2023-03-27T13:14:45.707Z'
+                  updated: '2023-03-27T13:14:45.727Z'
+                  code: capital-cities
+                  version: 2
+                created: '2023-03-27T13:14:45.712Z'
+                updated: '2023-03-27T13:14:45.785Z'
+                code: 1-in-a-tidal-wave-of-mystery
+                version: 3
+    albumTitleMismatch:
+      value:
+        error: Album recorded with the provided _id (6412fdc5f597960c9889ac2b) has not been recorded with this title
+        album:
+          tags:
+            - britpop
+            - alternative-rock
+          songs: []
+          _id: 6412fdc5f597960c9889ac2b
+          title: Urban Hymns
+          releaseDate: '1997-09-29T00:00:00.000Z'
+          type: Studio
+          band:
+            tags:
+              - Array
+            albums:
+              - Array
+            _id: 6412fdc5f597960c9889ac07
+            name: The Verve
+            formationYear: 1990
+            bio: Longtemps considéré comme un des groupes les plus innovants et captivants de la scène pop contemporaine britannique, The Verve fit finalement surface en 1997 avec le tube Bitter Sweet Symphony.
+            created: '2023-03-16T11:30:13.638Z'
+            updated: '2023-03-16T11:30:13.876Z'
+            code: the-verve
+            version: 21
+          created: '2023-03-16T11:30:13.873Z'
+          updated: '2023-03-16T11:30:13.873Z'
+          code: 43-urban-hymns
+          version: 0
+    albumUpdated:
+      value:
+        updatedAlbum:
+          tags:
+            - big-beat
+            - remixes
+          songs: []
+          _id: 6414570141783b57426154bf
+          title: The Added Fat
+          releaseDate: '2012-12-03T00:00:00.000Z'
+          type: EP
+          band:
+            tags:
+              - breakbeat
+              - rave
+            albums:
+              - tags:
+                  - big-beat
+                  - remixes
+                songs: []
+                _id: 6414570141783b57426154bf
+                title: The Added Fat
+                releaseDate: '2012-12-03T00:00:00.000Z'
+                type: EP
+                code: 18-the-fat-of-the-land
+            _id: 6414570141783b57426154ba
+            name: The Prodigy
+            formationYear: 1990
+            bio: The Prodigy apparait sur la scène rave underground au début des années 1990, et atteint depuis lors une immense popularité et une renommée mondiale.
+            created: '2023-03-17T12:03:13.779Z'
+            updated: '2023-03-17T12:03:13.814Z'
+            code: the-prodigy
+            version: 1
+          created: '2023-03-17T12:03:13.812Z'
+          updated: '2023-03-17T12:03:13.825Z'
+          code: 18-the-fat-of-the-land
+          version: 1
+        originalAlbum:
+          tags:
+            - big-beat
+          songs: []
+          _id: 6414570141783b57426154bf
+          title: The Fat of the Land
+          releaseDate: '1997-06-30T00:00:00.000Z'
+          type: Studio
+          band:
+            tags:
+              - breakbeat
+              - rave
+            albums:
+              - tags:
+                  - big-beat
+                songs: []
+                _id: 6414570141783b57426154bf
+                title: The Fat of the Land
+                releaseDate: '1997-06-30T00:00:00.000Z'
+                type: Studio
+                code: 18-the-fat-of-the-land
+            _id: 6414570141783b57426154ba
+            name: The Prodigy
+            formationYear: 1990
+            bio: The Prodigy apparait sur la scène rave underground au début des années 1990, et atteint depuis lors une immense popularité et une renommée mondiale.
+            created: '2023-03-17T12:03:13.779Z'
+            updated: '2023-03-17T12:03:13.814Z'
+            code: the-prodigy
+            version: 1
+          created: '2023-03-17T12:03:13.812Z'
+          updated: '2023-03-17T12:03:13.812Z'
+          code: 18-the-fat-of-the-land
+          version: 0
+    bandCreated:
+      value:
+        tags:
+          - electro
+          - french-touch
+        albums: []
+        _id: 6422ecaf799319ad28530e21
+        name: Daft Punk
+        formationYear: 1993
+        bio: Daft Punk est un groupe de musique électronique français composé de Thomas Bangalter et Guy-Manuel de Homem-Christo.
+        created: '2023-03-28T13:33:35.283Z'
+        updated: '2023-03-28T13:33:35.283Z'
+        code: daft-punk
+        version: 0
+    bandFoundByBandKey:
+      value:
+        - tags:
+            - britpop
+          albums: []
+          _id: 640efc3e10edcd809102d3b9
+          name: Oasis
+          formationYear: 1991
+          bio: Oasis est un groupe de rock alternatif britannique, originaire de Manchester. Initialement nommé The Rain, le groupe est au départ composé de Liam Gallagher (chant), Paul « Bonehead » Arthurs (guitare), Paul « Guigsy » McGuigan (basse) et Tony McCarroll (batterie), rapidement rejoint par Noel (guitare principale et chant), le frère aîné de Liam.
+          created: '2023-03-13T10:34:38.296Z'
+          updated: '2023-03-13T10:34:38.296Z'
+          code: oasis
+          version: 0
+    bandMismatch:
+      value:
+        error: Band found with the provided key 6413040e6afb6613268ab3a5 and related band are mismatching
+        relatedBand:
+          tags:
+            - alternative-rock
+          albums:
+            - tags:
+                - psychedelic-rock
+              songs: []
+              _id: 6413040e6afb6613268ab3a6
+              title: A Storm in Heaven
+              releaseDate: '1993-06-21T00:00:00.000Z'
+              code: 42-a-storm-in-heaven
+            - tags:
+                - psychedelic-rock
+              songs: []
+              _id: 6413040e6afb6613268ab3a8
+              title: A Northern Soul
+              releaseDate: '1995-06-20T00:00:00.000Z'
+              code: 43-a-northern-soul
+            - tags:
+                - britpop
+                - alternative-rock
+              songs: []
+              _id: 6413040f6afb6613268ab3d0
+              title: Urban Hymns
+              releaseDate: '1997-09-29T00:00:00.000Z'
+              type: Studio
+              code: 43-urban-hymns
+          _id: 6413040e6afb6613268ab3a4
+          name: The Verve
+          formationYear: 1990
+          bio: Longtemps considéré comme un des groupes les plus innovants et captivants de la scène pop contemporaine britannique, The Verve fit finalement surface en 1997 avec le tube Bitter Sweet Symphony.
+          created: '2023-03-16T11:57:02.686Z'
+          updated: '2023-03-16T11:57:03.016Z'
+          code: the-verve
+          version: 25
+        providedBand:
+          tags: []
+          albums: []
+          _id: 6413040e6afb6613268ab3a5
+          name: Kasabian
+          created: '2023-03-16T11:57:02.689Z'
+          updated: '2023-03-16T11:57:02.689Z'
+          code: kasabian
+          version: 0
+    bandSearchMismatch:
+      value:
+        error: No album found with the given filters
+        filters:
+          $or:
+            - code: 13-true-(avicii-by-avicii)
+          $and:
+            - band:
+                tags:
+                  - house
+                albums:
+                  - tags:
+                      - electro
+                      - edm
+                    songs: []
+                    _id: 641af2ed2501a2374c462aeb
+                    title: I Created Disco
+                    releaseDate: '2007-06-15T00:00:00.000Z'
+                    type: Studio
+                    code: 8-i-created-disco
+                  - tags:
+                      - electro
+                      - edm
+                    songs: []
+                    _id: 641af2ed2501a2374c462aed
+                    title: 18 Months
+                    releaseDate: '2014-10-31T00:00:00.000Z'
+                    type: Studio
+                    code: 9-18-months
+                  - tags:
+                      - edm
+                    songs: []
+                    _id: 641af2ed2501a2374c462aef
+                    title: Motion (Deluxe)
+                    releaseDate: '2014-10-31T00:00:00.000Z'
+                    type: Studio
+                    code: 10-motion-(deluxe)
+                  - tags:
+                      - electro
+                    songs: []
+                    _id: 641af2ed2501a2374c462af1
+                    title: Ready for the Weekend
+                    releaseDate: '2009-08-14T00:00:00.000Z'
+                    type: Studio
+                    code: 11-ready-for-the-weekend
+                  - tags:
+                      - funk
+                      - disco
+                      - electro
+                      - house
+                      - edm
+                    songs: []
+                    _id: 641af2ed2501a2374c462af3
+                    title: Funk Wav Bounces Vol. 1
+                    releaseDate: '2017-06-30T00:00:00.000Z'
+                    type: Studio
+                    code: 12-funk-wav-bounces-vol.-1
+                _id: 641af2ed2501a2374c462aea
+                name: Calvin Harris
+                formationYear: 2002
+                bio: Calvin Harris sort en 2007 son premier album I Created Disco, qui deviendra disque d'or au Royaume-Uni
+                created: '2023-03-22T12:22:05.917Z'
+                updated: '2023-03-22T12:22:05.978Z'
+                code: calvin-harris
+                version: 5
+    dbConnectionError:
+      value:
+        error: Cannot connect to mongoDB
+    duplicateSongPosition:
+      value:
+        error: Another song was previously recorded with the same position
+        duplicateSongPosition:
+          _id: 641c4fdde7483f79c70b31f4
+          title: While the Song Remains the Same
+          position: 7
+          album:
+            tags:
+              - alternative-rock
+              - psychedelic-rock
+            songs:
+              - _id: 641c4fdce7483f79c70b31e5
+                title: Riverman
+                position: 1
+                code: 3-riverman
+                rating: null
+                duration: null
+              - _id: 641c4fdde7483f79c70b31f4
+                title: While the Song Remains the Same
+                position: 7
+                code: 9-while-the-song-remains-the-same
+                rating: null
+                duration: null
+            _id: 641c4fdce7483f79c70b31df
+            title: Chasing Yesterday
+            releaseDate: '2015-02-25T00:00:00.000Z'
+            type: Studio
+            band:
+              tags:
+                - rock
+                - alternative-rock
+              albums:
+                - tags:
+                    - alternative-rock
+                    - psychedelic-rock
+                  songs:
+                    - _id: 641c4fdce7483f79c70b31e5
+                      title: Riverman
+                      position: 1
+                      code: 3-riverman
+                      rating: null
+                      duration: null
+                    - _id: 641c4fdde7483f79c70b31f4
+                      title: While the Song Remains the Same
+                      position: 7
+                      code: 9-while-the-song-remains-the-same
+                      rating: null
+                      duration: null
+                  _id: 641c4fdce7483f79c70b31df
+                  title: Chasing Yesterday
+                  releaseDate: '2015-02-25T00:00:00.000Z'
+                  type: Studio
+                  code: 2-chasing-yesterday
+              _id: 641c4fdce7483f79c70b31dc
+              name: Noel Gallagher's High Flying Birds
+              formationYear: 2010
+              bio: Noel Gallagher's High Flying Birds est un groupe de rock britannique formé par Noel Gallagher, de l'ancien pianiste du groupe Oasis Mark Rowe, du batteur Jeremy Stacey de The Lemon Tree, et du bassiste Russell Pritchard.
+              created: '2023-03-23T13:10:52.737Z'
+              updated: '2023-03-23T13:10:52.777Z'
+              code: noel-gallagher's-high-flying-birds
+              version: 2
+            created: '2023-03-23T13:10:52.770Z'
+            updated: '2023-03-23T13:10:53.124Z'
+            code: 2-chasing-yesterday
+            version: 7
+          created: '2023-03-23T13:10:53.117Z'
+          updated: '2023-03-23T13:10:53.117Z'
+          code: 9-while-the-song-remains-the-same
+          version: 0
+          rating: null
+          duration: null
+    invalidAlbumTitle:
+      value:
+        error: Submitted album validation failed
+        messages:
+          - An album must have a title
+    invalidAlbumType:
+      value:
+        error: Submitted album validation failed
+        messages:
+          - '`dummy` is not a valid enum value for path `type`.'
+    invalidAlbumTypeSearch:
+      value:
+        error: Invalid enum values
+        invalidEnumFilters:
+          - field: type
+            providedEnumValue: dummy
+            expectedEnumValues:
+              - Compilation
+              - EP
+              - Live
+              - Single
+              - Studio
+    invalidBandName:
+      value:
+        error: Submitted band validation failed
+        messages:
+          - A band must have a name
+    invalidDuration:
+      value:
+        error: Submitted song validation failed
+        messages:
+          - Cast to Number failed for value "3:61" at path "duration"
+    invalidFieldsAlbum:
+      value:
+        error: Invalid fields found in JSON
+        invalidFields:
+          - dummy
+        expectedFields:
+          - title
+          - releaseDate
+          - type
+          - tags
+    invalidFieldsBand:
+      value:
+        error: Invalid fields found in JSON
+        invalidFields:
+          - dummy
+        expectedFields:
+          - name
+          - formationYear
+          - bio
+          - tags
+    invalidFieldsSong:
+      value:
+        error: Invalid fields found in JSON
+        invalidFields:
+          - dummy
+        expectedFields:
+          - title
+          - position
+          - duration
+          - singers
+          - lyrics
+          - myRating
+    invalidFormationYearMin:
+      value:
+        error: Submitted band validation failed
+        messages:
+          - formationYear must be after 1900
+    invalidFormationYearMax:
+      value:
+        error: Submitted band validation failed
+        messages:
+          - formationYear must be before 2023
+    invalidFormationYearNotInteger:
+      value:
+        error: Submitted band validation failed
+        messages:
+          - formationYear (1998.8) must be an integer!
+    invalidId:
+      value:
+        error: Submitted JSON validation failed
+        messages:
+          - 'Provided _id is invalid: 4145d71484a3a5f3e5de36f'
+      description: _id must be a valid mongoDB ObjectId
+    invalidJSON:
+      value:
+        error: Invalid JSON submitted
+    invalidLimitAndSkip:
+      value:
+        error: Invalid values for pagination parameters found on URL
+        messages:
+          - 'limit value must be a positive integer under 5: 1.5 is not valid'
+          - 'skip value must be a positive integer: b is not valid'
+      description: The API dev environment has results limited to 5, hence the message "limit value must be a positive integer under 5"
+    invalidMyRating:
+      value:
+        error: Submitted song validation failed
+        messages:
+          - myRating must be an integer from 0 to 10
+    invalidPosition:
+      value:
+        error: Submitted song validation failed
+        messages:
+          - Cast to Number failed for value "-1" at path "position"
+    invalidReleaseDate:
+      value:
+        error: Submitted album validation failed
+        messages:
+          - null is not a valid date!
+    invalidReleaseDateMin:
+      value:
+        error: Submitted album validation failed
+        messages:
+          - releaseDate is before January 01, 1900
+    invalidSongTitle:
+      value:
+        error: Submitted song validation failed
+        messages:
+          - A song must have a title
+    langNotSupported:
+      value:
+        error: lang not supported
+        availableLangs:
+          - en
+          - fr
+      description: More languages may be supported in the future
+    mismatchingId:
+      value:
+        error: Submitted JSON validation failed
+        messages:
+          - _id provided in the submitted JSON (dummy) and _id found in URL (641ee9eff85e2959010fd017) must match
+    missingKey:
+      value:
+        error: Submitted JSON validation failed
+        messages:
+          - Submitted JSON must contain an _id or a code key
+    missingTitle:
+      value:
+        error: Submitted JSON validation failed
+        messages:
+          - Submitted JSON must contain a title key
+    noAlbumWithProvidedCode:
+      value:
+        error: 'No album recorded with the provided code: 3-urban-hymns4'
+    noAlbumWithProvidedId:
+      value:
+        error: 'No album recorded with the provided _id: 412fff1b63fa20ee59a95146'
+    noAlbumWithProvidedIdOrCode:
+      value:
+        error: 'No album recorded with the provided _id or code: 42197d927749f8a51d8b0d76'
+    noBandWithProvidedIdOrCode:
+      value:
+        error: 'No band recorded with the provided _id or code: 41af3d2411b53384c2f907a6'
+    noSongWithProvidedCode:
+      value:
+        error: 'No song recorded with the provided code: 3-tout-doit-disparaitre2'
+    noSongWithProvidedId:
+      value:
+        error: 'No song recorded with the provided _id: 41da8ce5825181cff792b1b6'
+    songCreated:
+      value:
+        _id: 641c4b180d797974ad4178db
+        title: Lock All the Doors
+        position: 4
+        duration: '03:01'
+        singers: Noel Gallagher
+        lyrics: |-
+          She wore a star-shaped tambourine
+          Prettiest girl I'd ever seen
+          Was standing lost and lonely on the shore
+          I tried to catch her every night
+          Dancing on the road in her candlelight
+          But I can't seem to reach her anymore
+          Lock all the doors
+          Maybe they'll never find us
+          I could be sure, like never before, this time
+        rating: '8.00'
+        album:
+          tags:
+            - alternative-rock
+            - psychedelic-rock
+          songs:
+            - _id: 641c4b180d797974ad4178d7
+              title: Riverman
+              position: 1
+              code: 3-riverman
+              rating: null
+              duration: null
+            - _id: 641c4b180d797974ad4178d9
+              title: Do the Damage
+              position: 11
+              code: 4-do-the-damage
+              rating: null
+              duration: null
+            - _id: 641c4b180d797974ad4178db
+              title: Lock All the Doors
+              position: 4
+              duration: '03:01'
+              singers: Noel Gallagher
+              lyrics: |-
+                She wore a star-shaped tambourine
+                Prettiest girl I'd ever seen
+                Was standing lost and lonely on the shore
+                I tried to catch her every night
+                Dancing on the road in her candlelight
+                But I can't seem to reach her anymore
+                Lock all the doors
+                Maybe they'll never find us
+                I could be sure, like never before, this time
+              rating: '8.00'
+              code: 5-lock-all-the-doors
+          _id: 641c4b180d797974ad4178d1
+          title: Chasing Yesterday
+          releaseDate: '2015-02-25T00:00:00.000Z'
+          type: Studio
+          band:
+            tags:
+              - rock
+              - alternative-rock
+            albums:
+              - tags:
+                  - alternative-rock
+                songs:
+                  - _id: 641c4b180d797974ad4178d3
+                    title: Everybody's on the Run
+                    position: 1
+                    code: 1-everybody's-on-the-run
+                    rating: null
+                    duration: null
+                  - _id: 641c4b180d797974ad4178d5
+                    title: Dream On
+                    position: 2
+                    code: 2-dream-on
+                    rating: null
+                    duration: null
+                _id: 641c4b180d797974ad4178cf
+                title: Noel Gallagher's High Flying Birds
+                releaseDate: '2011-10-17T00:00:00.000Z'
+                type: Studio
+                code: 1-noel-gallagher's-high-flying-birds
+              - tags:
+                  - alternative-rock
+                  - psychedelic-rock
+                songs:
+                  - _id: 641c4b180d797974ad4178d7
+                    title: Riverman
+                    position: 1
+                    code: 3-riverman
+                    rating: null
+                    duration: null
+                  - _id: 641c4b180d797974ad4178d9
+                    title: Do the Damage
+                    position: 11
+                    code: 4-do-the-damage
+                    rating: null
+                    duration: null
+                  - _id: 641c4b180d797974ad4178db
+                    title: Lock All the Doors
+                    position: 4
+                    duration: '03:01'
+                    singers: Noel Gallagher
+                    lyrics: |-
+                      She wore a star-shaped tambourine
+                      Prettiest girl I'd ever seen
+                      Was standing lost and lonely on the shore
+                      I tried to catch her every night
+                      Dancing on the road in her candlelight
+                      But I can't seem to reach her anymore
+                      Lock all the doors
+                      Maybe they'll never find us
+                      I could be sure, like never before, this time
+                    rating: '8.00'
+                    code: 5-lock-all-the-doors
+                _id: 641c4b180d797974ad4178d1
+                title: Chasing Yesterday
+                releaseDate: '2015-02-25T00:00:00.000Z'
+                type: Studio
+                code: 2-chasing-yesterday
+            _id: 641c4b180d797974ad4178ce
+            name: Noel Gallagher's High Flying Birds
+            formationYear: 2010
+            bio: Noel Gallagher's High Flying Birds est un groupe de rock britannique formé par Noel Gallagher, de l'ancien pianiste du groupe Oasis Mark Rowe, du batteur Jeremy Stacey de The Lemon Tree, et du bassiste Russell Pritchard.
+            created: '2023-03-23T12:50:32.312Z'
+            updated: '2023-03-23T12:50:32.350Z'
+            code: noel-gallagher's-high-flying-birds
+            version: 2
+          created: '2023-03-23T12:50:32.345Z'
+          updated: '2023-03-23T12:50:32.506Z'
+          code: 2-chasing-yesterday
+          version: 3
+        created: '2023-03-23T12:50:32.500Z'
+        updated: '2023-03-23T12:50:32.500Z'
+        code: 5-lock-all-the-doors
+        version: 0
+    songDeleted:
+      value:
+        success: Song deleted properly
+        deleted:
+          _id: 641da4bb0bf7b217fbbee875
+          title: Tout Doit Disparaître
+          position: 6
+          album:
+            tags:
+              - house
+            songs:
+              - _id: 641da4ba0bf7b217fbbee862
+                title: Le patron est devenu fou
+                position: 1
+                duration: '10:07'
+                code: 22-le-patron-est-devenu-fou
+                rating: null
+              - _id: 641da4ba0bf7b217fbbee864
+                title: Prix choc
+                position: 2
+                duration: '08:52'
+                code: 23-prix-choc
+                rating: null
+            _id: 641da4ba0bf7b217fbbee85e
+            title: Super Discount
+            releaseDate: '1996-10-16T00:00:00.000Z'
+            type: Studio
+            band:
+              tags:
+                - french-touch
+              albums:
+                - tags:
+                    - house
+                  songs:
+                    - _id: 641da4ba0bf7b217fbbee862
+                      title: Le patron est devenu fou
+                      position: 1
+                      duration: '10:07'
+                      code: 22-le-patron-est-devenu-fou
+                      rating: null
+                    - _id: 641da4ba0bf7b217fbbee864
+                      title: Prix choc
+                      position: 2
+                      duration: '08:52'
+                      code: 23-prix-choc
+                      rating: null
+                  _id: 641da4ba0bf7b217fbbee85e
+                  title: Super Discount
+                  releaseDate: '1996-10-16T00:00:00.000Z'
+                  type: Studio
+                  code: 1-super-discount
+                - tags: []
+                  songs: []
+                  _id: 641da4ba0bf7b217fbbee860
+                  title: Super Discount 2
+                  code: 2-super-discount-2
+              _id: 641da4ba0bf7b217fbbee85c
+              name: Etienne de Crécy
+              formationYear: 1992
+              bio: Avec Super Discount en 1996, Etienne de Crécy contribue grandement à populariser la French touch.
+              created: '2023-03-24T13:25:14.672Z'
+              updated: '2023-03-24T13:25:14.690Z'
+              code: etienne-de-crecy
+              version: 2
+            created: '2023-03-24T13:25:14.678Z'
+            updated: '2023-03-24T13:25:15.017Z'
+            code: 1-super-discount
+            version: 13
+          created: '2023-03-24T13:25:15.012Z'
+          updated: '2023-03-24T13:25:15.012Z'
+          code: 23-tout-doit-disparaitre
+          version: 0
+          rating: null
+          duration: null
+    songFoundBySongKey:
+      value:
+        - _id: 6421914747c3c282bde39c43
+          title: Origami
+          position: 8
+          duration: '03:45'
+          rating: '4.00'
+          album:
+            tags:
+              - indie-pop
+            songs:
+              - _id: 6421914747c3c282bde39c3f
+                title: Kangaroo Court
+                position: 3
+                duration: '03:43'
+                singers: Ryan Merchant, Sebu Simonian
+                code: 11-kangaroo-court
+                rating: null
+              - _id: 6421914747c3c282bde39c41
+                title: I Sold My Bed, But Not My Stereo (radio edit)
+                position: 4
+                duration: '08:54'
+                rating: '5.00'
+                code: 12-i-sold-my-bed-but-not-my-stereo-(radio-edit)
+              - _id: 6421914747c3c282bde39c43
+                title: Origami
+                position: 8
+                duration: '03:45'
+                rating: '4.00'
+                code: 13-origami
+            _id: 6421914747c3c282bde39c3b
+            title: In a Tidal Wave of Mystery
+            releaseDate: '2013-06-04T00:00:00.000Z'
+            type: Studio
+            band:
+              tags:
+                - indie-pop
+                - synth-pop
+                - indietronica
+              albums:
+                - tags:
+                    - indie-pop
+                  songs:
+                    - _id: 6421914747c3c282bde39c3f
+                      title: Kangaroo Court
+                      position: 3
+                      duration: '03:43'
+                      singers: Ryan Merchant, Sebu Simonian
+                      code: 11-kangaroo-court
+                      rating: null
+                    - _id: 6421914747c3c282bde39c41
+                      title: I Sold My Bed, But Not My Stereo (radio edit)
+                      position: 4
+                      duration: '08:54'
+                      rating: '5.00'
+                      code: 12-i-sold-my-bed-but-not-my-stereo-(radio-edit)
+                    - _id: 6421914747c3c282bde39c43
+                      title: Origami
+                      position: 8
+                      duration: '03:45'
+                      rating: '4.00'
+                      code: 13-origami
+                  _id: 6421914747c3c282bde39c3b
+                  title: In a Tidal Wave of Mystery
+                  releaseDate: '2013-06-04T00:00:00.000Z'
+                  type: Studio
+                  code: 1-in-a-tidal-wave-of-mystery
+                - tags:
+                    - synth-pop
+                  songs:
+                    - _id: 6421914747c3c282bde39c45
+                      title: Swimming Pool Summer
+                      position: 2
+                      duration: '08:33'
+                      singers: '?'
+                      code: 14-swimming-pool-summer
+                      rating: null
+                    - _id: 6421914747c3c282bde39c47
+                      title: Drop Everything (radio edit)
+                      position: 6
+                      duration: '03:10'
+                      singers: Ryan Merchant, Sebu Simonian
+                      rating: '9.00'
+                      code: 15-drop-everything-(radio-edit)
+                  _id: 6421914747c3c282bde39c3d
+                  title: Solarize
+                  releaseDate: '2018-08-10T00:00:00.000Z'
+                  type: Studio
+                  code: 2-solarize
+              _id: 6421914747c3c282bde39c3a
+              name: Capital Cities
+              formationYear: 2010
+              bio: Capital Cities a débuté en écrivant des jingles commerciaux avant d'orienter ses talents de compositeurs brillants et accrocheurs vers le monde de la pop.
+              created: '2023-03-27T12:51:19.121Z'
+              updated: '2023-03-27T12:51:19.139Z'
+              code: capital-cities
+              version: 2
+            created: '2023-03-27T12:51:19.125Z'
+            updated: '2023-03-27T12:51:19.218Z'
+            code: 1-in-a-tidal-wave-of-mystery
+            version: 3
+          created: '2023-03-27T12:51:19.212Z'
+          updated: '2023-03-27T12:51:19.212Z'
+          code: 13-origami
+          version: 0
+    songTitleMismatch:
+      value:
+        error: Song recorded with the provided _id (641da754ffa0ea1b5b696baf) has not been recorded with this title
+        song:
+          _id: 641da754ffa0ea1b5b696baf
+          title: Tout Doit Disparaître
+          position: 6
+          album:
+            tags:
+              - house
+            songs:
+              - _id: 641da754ffa0ea1b5b696b87
+                title: Le patron est devenu fou
+                position: 1
+                duration: '10:07'
+                code: 22-le-patron-est-devenu-fou
+                rating: null
+              - _id: 641da754ffa0ea1b5b696b89
+                title: Prix choc
+                position: 2
+                duration: '08:52'
+                code: 23-prix-choc
+                rating: null
+              - _id: 641da754ffa0ea1b5b696baf
+                title: Tout Doit Disparaître
+                position: 6
+                code: 23-tout-doit-disparaitre
+                rating: null
+                duration: null
+            _id: 641da754ffa0ea1b5b696b83
+            title: Super Discount
+            releaseDate: '1996-10-16T00:00:00.000Z'
+            type: Studio
+            band:
+              tags:
+                - french-touch
+              albums:
+                - tags:
+                    - house
+                  songs:
+                    - _id: 641da754ffa0ea1b5b696b87
+                      title: Le patron est devenu fou
+                      position: 1
+                      duration: '10:07'
+                      code: 22-le-patron-est-devenu-fou
+                      rating: null
+                    - _id: 641da754ffa0ea1b5b696b89
+                      title: Prix choc
+                      position: 2
+                      duration: '08:52'
+                      code: 23-prix-choc
+                      rating: null
+                    - _id: 641da754ffa0ea1b5b696baf
+                      title: Tout Doit Disparaître
+                      position: 6
+                      code: 23-tout-doit-disparaitre
+                      rating: null
+                      duration: null
+                  _id: 641da754ffa0ea1b5b696b83
+                  title: Super Discount
+                  releaseDate: '1996-10-16T00:00:00.000Z'
+                  type: Studio
+                  code: 1-super-discount
+                - tags: []
+                  songs: []
+                  _id: 641da754ffa0ea1b5b696b85
+                  title: Super Discount 2
+                  code: 2-super-discount-2
+              _id: 641da754ffa0ea1b5b696b81
+              name: Etienne de Crécy
+              formationYear: 1992
+              bio: Avec Super Discount en 1996, Etienne de Crécy contribue grandement à populariser la French touch.
+              created: '2023-03-24T13:36:20.058Z'
+              updated: '2023-03-24T13:36:20.079Z'
+              code: etienne-de-crecy
+              version: 2
+            created: '2023-03-24T13:36:20.065Z'
+            updated: '2023-03-24T13:36:20.722Z'
+            code: 1-super-discount
+            version: 25
+          created: '2023-03-24T13:36:20.717Z'
+          updated: '2023-03-24T13:36:20.717Z'
+          code: 23-tout-doit-disparaitre
+          version: 0
+          rating: null
+          duration: null
+    songUpdated:
+      value:
+        updatedSong:
+          _id: 641ee6e6394aa0558d0c9ae4
+          title: Wasting My Young Years (Kids of the Apocalypse Remix)
+          position: 88
+          duration: '03:05'
+          singers: Hannah Felicity May Reid
+          lyrics: |-
+            Baby I'm wasting my young years
+            Baby I'm wasting
+            Baby I'm wasting
+            Baby I'm wasting
+            Baby I'm wasting
+            My young years
+          rating: '7.50'
+          album:
+            tags:
+              - electro
+              - downtempo
+            songs:
+              - _id: 641ee6e6394aa0558d0c9ae4
+                title: Wasting My Young Years (Kids of the Apocalypse Remix)
+                position: 88
+                duration: '03:05'
+                singers: Hannah Felicity May Reid
+                lyrics: |-
+                  Baby I'm wasting my young years
+                  Baby I'm wasting
+                  Baby I'm wasting
+                  Baby I'm wasting
+                  Baby I'm wasting
+                  My young years
+                rating: '7.50'
+                code: 20-wasting-my-young-years
+            _id: 641ee6e5394aa0558d0c9add
+            title: If You Wait
+            releaseDate: '2013-09-06T00:00:00.000Z'
+            type: Studio
+            band:
+              tags:
+                - indie-pop
+                - electro
+              albums:
+                - tags:
+                    - electro
+                    - downtempo
+                  songs:
+                    - _id: 641ee6e6394aa0558d0c9ae4
+                      title: Wasting My Young Years (Kids of the Apocalypse Remix)
+                      position: 88
+                      duration: '03:05'
+                      singers: Hannah Felicity May Reid
+                      lyrics: |-
+                        Baby I'm wasting my young years
+                        Baby I'm wasting
+                        Baby I'm wasting
+                        Baby I'm wasting
+                        Baby I'm wasting
+                        My young years
+                      rating: '7.50'
+                      code: 20-wasting-my-young-years
+                  _id: 641ee6e5394aa0558d0c9add
+                  title: If You Wait
+                  releaseDate: '2013-09-06T00:00:00.000Z'
+                  type: Studio
+                  code: 1-if-you-wait
+              _id: 641ee6e5394aa0558d0c9adc
+              name: London Grammar
+              formationYear: 2009
+              bio: La musique de London Grammar est minimaliste, mélange d'ambiances électroniques, soul et parfois plus classiques.
+              created: '2023-03-25T12:19:49.982Z'
+              updated: '2023-03-25T12:19:49.989Z'
+              code: london-grammar
+              version: 1
+            created: '2023-03-25T12:19:49.986Z'
+            updated: '2023-03-25T12:19:50.037Z'
+            code: 1-if-you-wait
+            version: 1
+          created: '2023-03-25T12:19:50.034Z'
+          updated: '2023-03-25T12:19:50.062Z'
+          code: 20-wasting-my-young-years
+          version: 0
+        originalSong:
+          _id: 641ee6e6394aa0558d0c9ae4
+          title: Wasting My Young Years
+          position: 4
+          duration: '03:24'
+          singers: Hannah Reid
+          lyrics: |-
+            You crossed this line
+            Do you find it hard to sit with me tonight?
+          rating: '9.00'
+          album:
+            tags:
+              - electro
+              - downtempo
+            songs:
+              - _id: 641ee6e6394aa0558d0c9ae4
+                title: Wasting My Young Years
+                position: 4
+                duration: '03:24'
+                singers: Hannah Reid
+                lyrics: |-
+                  You crossed this line
+                  Do you find it hard to sit with me tonight?
+                rating: '9.00'
+                code: 20-wasting-my-young-years
+            _id: 641ee6e5394aa0558d0c9add
+            title: If You Wait
+            releaseDate: '2013-09-06T00:00:00.000Z'
+            type: Studio
+            band:
+              tags:
+                - indie-pop
+                - electro
+              albums:
+                - tags:
+                    - electro
+                    - downtempo
+                  songs:
+                    - _id: 641ee6e6394aa0558d0c9ae4
+                      title: Wasting My Young Years
+                      position: 4
+                      duration: '03:24'
+                      singers: Hannah Reid
+                      lyrics: |-
+                        You crossed this line
+                        Do you find it hard to sit with me tonight?
+                      rating: '9.00'
+                      code: 20-wasting-my-young-years
+                  _id: 641ee6e5394aa0558d0c9add
+                  title: If You Wait
+                  releaseDate: '2013-09-06T00:00:00.000Z'
+                  type: Studio
+                  code: 1-if-you-wait
+              _id: 641ee6e5394aa0558d0c9adc
+              name: London Grammar
+              formationYear: 2009
+              bio: La musique de London Grammar est minimaliste, mélange d'ambiances électroniques, soul et parfois plus classiques.
+              created: '2023-03-25T12:19:49.982Z'
+              updated: '2023-03-25T12:19:49.989Z'
+              code: london-grammar
+              version: 1
+            created: '2023-03-25T12:19:49.986Z'
+            updated: '2023-03-25T12:19:50.037Z'
+            code: 1-if-you-wait
+            version: 1
+          created: '2023-03-25T12:19:50.034Z'
+          updated: '2023-03-25T12:19:50.034Z'
+          code: 20-wasting-my-young-years
+          version: 0
+  schemas:
+    albumToCreate:
+      type: object
+      properties:
+        title:
+          description: Cannot be empty, will be trimmed. Multiple albums can share the same title, the API will generate an unique property called "code" to dissociate them.
+          type: string
+        releaseDate:
+          description: Must be a valid date, after "January 01, 1900". YYYY-MM-DD format or a valid javascript Date object.
+          type: string
+          format: date
+        type:
+          type: string
+          enum: ['Compilation', 'EP', 'Live', 'Single', 'Studio']
+        tags:
+          description: Usually music genres associated or any other information used to search this album. Any redondant tag will be deduplicated by the API.
+          type: array
+          items:
+            type: string
+      required:
+        - title
+    albumToDeleteWithId:
+      type: object
+      properties:
+        _id:
+          description: Album's _id, must match the _id provided in the URL.
+          type: string
+        title:
+          description: Must match the title recorded in the database for confirmation purposes.
+          type: string
+      required:
+        - _id
+        - title
+    albumToDeleteWithCode:
+      type: object
+      properties:
+        code:
+          description: Album's code, must match the code provided in the URL.
+          type: string
+        title:
+          description: Must match the title recorded in the database for confirmation purposes.
+          type: string
+      required:
+        - code
+        - title
+    albumToUpdateWithId:
+      allOf:
+        - $ref: '#/components/schemas/albumToCreate'
+        - type: object
+          properties:
+            _id:
+              description: Album's _id, must match the _id provided in the URL.
+              type: string
+      required:
+        - _id
+    albumToUpdateWithCode:
+      allOf:
+        - $ref: '#/components/schemas/albumToCreate'
+        - type: object
+          properties:
+            code:
+              description: Album's code, must match the code provided in the URL.
+              type: string
+      required:
+        - code
+    bandToCreate:
+      type: object
+      properties:
+        name:
+          description: Cannot be empty, will be trimmed. The band's unique name, two bands cannot share the same name.
+          type: string
+        formationYear:
+          description: Sometime between 1900 and the current year included.
+          type: integer
+          minimum: 1900
+        bio:
+          type: string
+        tags:
+          description: Usually music genres associated or any other information used to search this band. Any redondant tag will be deduplicated by the API.
+          type: array
+          items:
+            type: string
+      required:
+        - name
+    bandToDeleteWithId:
+      type: object
+      properties:
+        _id:
+          description: Band's _id, must match the _id provided in the URL.
+          type: string
+        name:
+          description: Must match the title recorded in the database for confirmation purposes.
+          type: string
+        cascadeDeleteAlbums:
+          description: Force delete a band with all its linked albums. If this property is not provided (or set to false), a band with at least one linked album won't be removed unless all of its linked albums are separately deleted.
+          type: boolean
+          default: false
+      required:
+        - _id
+        - name
+    bandToDeleteWithCode:
+      type: object
+      properties:
+        code:
+          description: Band's code, must match the code provided in the URL.
+          type: string
+        name:
+          description: Must match the title recorded in the database for confirmation purposes.
+          type: string
+        cascadeDeleteAlbums:
+          description: Force delete a band with all its linked albums. If this property is not provided (or set to false), a band with at least one linked album won't be removed unless all of its linked albums are separately deleted.
+          type: boolean
+          default: false
+      required:
+        - code
+        - name
+    bandToUpdateWithId:
+      allOf:
+        - $ref: '#/components/schemas/bandToCreate'
+        - type: object
+          properties:
+            _id:
+              description: Band's _id, must match the _id provided in the URL.
+              type: string
+      required:
+        - _id
+    bandToUpdateWithCode:
+      allOf:
+        - $ref: '#/components/schemas/bandToCreate'
+        - type: object
+          properties:
+            code:
+              description: Band's code, must match the code provided in the URL.
+              type: string
+      required:
+        - code
+    arrayOfReturnedAlbums:
+      type: array
+      items:
+        $ref: '#/components/schemas/returnedAlbum'
+    arrayOfReturnedBands:
+      type: array
+      items:
+        $ref: '#/components/schemas/returnedBand'
+    arrayOfReturnedSongs:
+      type: array
+      items:
+        $ref: '#/components/schemas/returnedSong'
+    duplicateSongPositionError:
+      type: object
+      properties:
+        error:
+          type: string
+        duplicateSongPosition:
+          $ref: '#/components/schemas/returnedSong'
+    errorWithFilters:
+      type: object
+      properties:
+        error:
+          type: string
+        filters:
+          type: object
+    errorAndReturnedAlbum:
+      type: object
+      properties:
+        error:
+          type: string
+        album:
+          $ref: '#/components/schemas/returnedAlbum'
+    errorAndReturnedBand:
+      type: object
+      properties:
+        error:
+          type: string
+        band:
+          $ref: '#/components/schemas/returnedBand'
+    errorAndReturnedSong:
+      type: object
+      properties:
+        error:
+          type: string
+        song:
+          $ref: '#/components/schemas/returnedSong'
+    errorMismatchingAlbum:
+      type: object
+      properties:
+        error:
+          type: string
+        relatedAlbum:
+          $ref: '#/components/schemas/returnedAlbum'
+        providedAlbum:
+          $ref: '#/components/schemas/returnedAlbum'
+    errorMismatchingBand:
+      type: object
+      properties:
+        error:
+          type: string
+        relatedBand:
+          $ref: '#/components/schemas/returnedBand'
+        providedBand:
+          $ref: '#/components/schemas/returnedBand'
+    invalidFieldsError:
+      type: object
+      properties:
+        error:
+          type: string
+        invalidFields:
+          type: array
+          description: An array returning every unknown field submitted
+          items:
+            type: string
+        expectedFields:
+          type: array
+          description: An array containing a list of the expected fields
+          items:
+            type: string
+    invalidFiltersError:
+      type: object
+      properties:
+        error:
+          type: string
+        invalidFilters:
+          type: array
+          description: An array returning every unknown filter submitted
+          items:
+            type: string
+        expectedFilters:
+          type: array
+          description: An array containing a list of the expected filters
+          items:
+            type: string
+    invalidNumericFields:
+      type: object
+      properties:
+        error:
+          type: string
+        invalidNumericFilters:
+          type: object
+          description: An object returning every invalid filter submitted along with its numeric value
+          items:
+            type: string
+    invalidRangeFields:
+      type: object
+      properties:
+        error:
+          type: string
+        invalidRangeFilters:
+          type: object
+          description: An object returning every invalid filter submitted along with its range value
+          items:
+            type: string
+    invalidSortablesError:
+      type: object
+      properties:
+        error:
+          type: string
+        invalidSortables:
+          type: array
+          description: An array returning every unknown sortable filter submitted
+          items:
+            type: string
+        expectedSortables:
+          type: array
+          description: An array containing a list of the expected sortable filters
+          items:
+            type: string
+    plainError:
+      type: object
+      properties:
+        error:
+          type: string
+    returnedAlbum:
+      type: object
+      properties:
+        tags:
+          type: array
+          description: usually music genres associated with this album or any other information used to search this album
+          items:
+            type: string
+        songs:
+          type: array
+          items:
+            $ref: '#/components/schemas/returnedSong'
+        _id:
+          type: string
+          description: unique identifier
+        title:
+          type: string
+        releaseDate:
+          type: string
+        type:
+          type: string
+          enum: ['Compilation', 'EP', 'Live', 'Single', 'Studio']
+        band:
+          $ref: '#/components/schemas/returnedBand'
+        created:
+          type: string
+          description: document creation date (generated by mongoDB)
+        updated:
+          type: string
+          description: document modification date (generated by mongoDB)
+        code:
+          type: string
+          description: human friendy unique identifier
+        version:
+          type: integer
+          description: document modifications counter (generated by mongoDB)
+    returnedBand:
+      type: object
+      properties:
+        tags:
+          type: array
+          description: usually music genres associated with this band or any other information used to search this band
+          items:
+            type: string
+        albums:
+          type: array
+          items:
+            $ref: '#/components/schemas/returnedAlbum'
+        _id:
+          type: string
+          description: unique identifier
+        name:
+          type: string
+        formationYear:
+          type: integer
+          description: sometime between 1900 and the current year
+          minimum: 1900
+        bio:
+          type: string
+        created:
+          type: string
+          description: document creation date (generated by mongoDB)
+        updated:
+          type: string
+          description: document modification date (generated by mongoDB)
+        code:
+          type: string
+          description: human friendy unique identifier
+        version:
+          type: integer
+          description: document modifications counter (generated by mongoDB)
+    returnedSong:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: unique identifier
+        title:
+          type: string
+        position:
+          type: integer
+        duration:
+          type: string
+        singers:
+          type: string
+        lyrics:
+          type: string
+        rating:
+          type: string
+        album:
+          $ref: '#/components/schemas/returnedAlbum'
+        created:
+          type: string
+          description: document creation date (generated by mongoDB)
+        updated:
+          type: string
+          description: document modification date (generated by mongoDB)
+        code:
+          type: string
+          description: human friendy unique identifier
+        version:
+          type: integer
+          description: document modifications counter (generated by mongoDB)
+    songToCreate:
+      type: object
+      properties:
+        title:
+          description: Cannot be empty, will be trimmed. Multiple songs can share the same title, the API will generate an unique property called "code" to dissociate them.
+          type: string
+        position:
+          description: Must be a positive integer. Two songs cannot share the same position.
+          type: integer
+          minimum: 1
+        duration:
+          description: Must be in mm:ss format.
+          type: string
+          pattern: /^\d+:[0-5]\d$/
+        singers:
+          description: Will be trimmed.
+          type: string
+        lyrics:
+          description: Line breaks will be preserved.
+          type: string
+        myRating:
+          description: Must be an integer between 0 and 10. Used to calculate the average rating of this song.
+          type: integer
+          minimum: 0
+          maximum: 10
+      required:
+        - title
+        - position
+    songToDeleteWithId:
+      type: object
+      properties:
+        _id:
+          description: Song's _id, must match the _id provided in the URL.
+          type: string
+        title:
+          description: Must match the title recorded in the database for confirmation purposes.
+          type: string
+      required:
+        - _id
+        - title
+    songToDeleteWithCode:
+      type: object
+      properties:
+        code:
+          description: Song's code, must match the code provided in the URL.
+          type: string
+        title:
+          description: Must match the title recorded in the database for confirmation purposes.
+          type: string
+      required:
+        - code
+        - title
+    songToUpdateWithId:
+      allOf:
+        - $ref: '#/components/schemas/songToCreate'
+        - type: object
+          properties:
+            _id:
+              description: Song's _id, must match the _id provided in the URL.
+              type: string
+      required:
+        - _id
+    songToUpdateWithCode:
+      allOf:
+        - $ref: '#/components/schemas/songToCreate'
+        - type: object
+          properties:
+            code:
+              description: Song's code, must match the code provided in the URL.
+              type: string
+      required:
+        - code
+    successAndDeletedAlbum:
+      type: object
+      properties:
+        success:
+          type: string
+        deleted:
+          $ref: '#/components/schemas/returnedAlbum'
+    successAndDeletedBand:
+      type: object
+      properties:
+        success:
+          type: string
+        deleted:
+          $ref: '#/components/schemas/returnedBand'
+    successAndDeletedSong:
+      type: object
+      properties:
+        success:
+          type: string
+        deleted:
+          $ref: '#/components/schemas/returnedSong'
+    validationError:
+      type: object
+      properties:
+        error:
+          type: string
+        messages:
+          type: array
+          description: An array returning every validation error message encountered
+          items:
+            type: string
+    validationErrorAndReturnedBand:
+      type: object
+      properties:
+        error:
+          type: string
+        messages:
+          type: array
+          description: An array returning every validation error message encountered
+          items:
+            type: string
+        band:
+          $ref: '#/components/schemas/returnedBand'
+    updatedBand:
+      type: object
+      properties:
+        updatedBand:
+          $ref: '#/components/schemas/returnedBand'
+        originalBand:
+          $ref: '#/components/schemas/returnedBand'
+    updatedAlbum:
+      type: object
+      properties:
+        updatedAlbum:
+          $ref: '#/components/schemas/returnedAlbum'
+        originalAlbum:
+          $ref: '#/components/schemas/returnedAlbum'
+    updatedSong:
+      type: object
+      properties:
+        updatedSong:
+          $ref: '#/components/schemas/returnedSong'
+        originalSong:
+          $ref: '#/components/schemas/returnedSong'

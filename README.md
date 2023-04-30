@@ -1,4 +1,5 @@
 # bitmaker
+
 _my simple music api_
 
 ## Stack
@@ -15,6 +16,13 @@ Les projets open source suivants donnent vie à bitmaker:
 - [mongoose] - ODM pour mongoDB
 - [supertest] - librairie d'assertions HTTP
 - [husky] - gestion des hooks git
+- [dotenv] - variables d'environnement
+- [eslint] - analyse de code
+- [prettier] - formattage de code
+
+## Documentation OpenAPI
+
+https://app.swaggerhub.com/apis-docs/bitmaker/bitmaker-my_simple_music_api/1.0.0
 
 ## Installation
 
@@ -60,12 +68,15 @@ Pour bypasser le hook :
 git commit -m 'message' --no-verify
 ```
 
-   [node.js]: <https://nodejs.org/en/>
-   [express]: <http://expressjs.com/>
-   [mongoDB]: <https://www.mongodb.com/>
-   [jest]: <https://jestjs.io/>
-   [mongoose]: <https://mongoosejs.com/>
-   [supertest]: <https://www.npmjs.com/package/supertest>
-   [husky]: <https://typicode.github.io/husky>
+[node.js]: https://nodejs.org/en/
+[express]: http://expressjs.com/
+[mongodb]: https://www.mongodb.com/
+[jest]: https://jestjs.io/
+[mongoose]: https://mongoosejs.com/
+[supertest]: https://www.npmjs.com/package/supertest
+[husky]: https://typicode.github.io/husky
+[dotenv]: https://www.npmjs.com/package/dotenv
+[eslint]: https://eslint.org/
+[prettier]: https://prettier.io/
 
 _RAVINDRA Soudakar - 2021_
