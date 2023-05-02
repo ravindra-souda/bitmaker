@@ -12,8 +12,7 @@ const postPayloads = {
   validCompleteBand: {
     name: ' Daft Punk ',
     formationYear: 1993,
-    bio:
-      'Daft Punk est un groupe de musique électronique français composé de Thomas Bangalter et Guy-Manuel de Homem-Christo.',
+    bio: 'Daft Punk est un groupe de musique électronique français composé de Thomas Bangalter et Guy-Manuel de Homem-Christo.',
     tags: ['electro ', ' French Touch '],
   },
   validMinimalBand: {
@@ -189,9 +188,11 @@ describe('POST /bands', () => {
   })
 
   afterAll(async () => {
-    await Band.deleteMany({ $or: [{ _id: bandIdsToClear }] }, (err) => {
-      if (err) console.log(err)
-    })
+    try {
+      await Band.deleteMany({ $or: [{ _id: bandIdsToClear }] })
+    } catch (err) {
+      console.log(err)
+    }
     bandIdsToClear = []
   })
 })
@@ -200,15 +201,13 @@ const getPayloads = {
   validCompleteBand: {
     name: 'Oasis',
     formationYear: 1991,
-    bio:
-      'Oasis est un groupe de rock alternatif britannique, originaire de Manchester. Initialement nommé The Rain, le groupe est au départ composé de Liam Gallagher (chant), Paul « Bonehead » Arthurs (guitare), Paul « Guigsy » McGuigan (basse) et Tony McCarroll (batterie), rapidement rejoint par Noel (guitare principale et chant), le frère aîné de Liam.',
+    bio: 'Oasis est un groupe de rock alternatif britannique, originaire de Manchester. Initialement nommé The Rain, le groupe est au départ composé de Liam Gallagher (chant), Paul « Bonehead » Arthurs (guitare), Paul « Guigsy » McGuigan (basse) et Tony McCarroll (batterie), rapidement rejoint par Noel (guitare principale et chant), le frère aîné de Liam.',
     tags: ['britpop'],
   },
   validAnotherBand: {
     name: 'Blur',
     formationYear: 1989,
-    bio:
-      'Blur est un groupe de rock britannique, originaire de Londres, en Angleterre. Il est composé du chanteur Damon Albarn, du guitariste Graham Coxon, du bassiste Alex James et du batteur Dave Rowntree.',
+    bio: 'Blur est un groupe de rock britannique, originaire de Londres, en Angleterre. Il est composé du chanteur Damon Albarn, du guitariste Graham Coxon, du bassiste Alex James et du batteur Dave Rowntree.',
     tags: ['britpop'],
   },
   validBandCollection: new Map([
@@ -469,9 +468,11 @@ describe('GET /bands', () => {
   })
 
   afterAll(async () => {
-    await Band.deleteMany({ $or: [{ _id: bandIdsToClear }] }, (err) => {
-      if (err) console.log(err)
-    })
+    try {
+      await Band.deleteMany({ $or: [{ _id: bandIdsToClear }] })
+    } catch (err) {
+      console.log(err)
+    }
     bandIdsToClear = []
   })
 })
@@ -615,9 +616,11 @@ patchPayloads.expectedUpdatedBand = {
 
 describe('PATCH /bands', () => {
   beforeEach(async () => {
-    await Band.deleteMany({ code: postedBandCode }, (err) => {
-      if (err) console.log(err)
-    })
+    try {
+      await Band.deleteMany({ code: postedBandCode })
+    } catch (err) {
+      console.log(err)
+    }
     const res = await request(app)
       .post('/api/bands')
       .send(patchPayloads.validCompleteBand)
@@ -856,9 +859,11 @@ describe('PATCH /bands', () => {
   })
 
   afterAll(async () => {
-    await Band.deleteMany({ $or: [{ _id: bandIdsToClear }] }, (err) => {
-      if (err) console.log(err)
-    })
+    try {
+      await Band.deleteMany({ $or: [{ _id: bandIdsToClear }] })
+    } catch (err) {
+      console.log(err)
+    }
     bandIdsToClear = []
   })
 })
@@ -867,8 +872,7 @@ const deletePayloads = {
   validCompleteBand: {
     name: 'The Chemical Brothers',
     formationYear: 1992,
-    bio:
-      'Initialement appelé The Dust Brothers, le groupe Chemical Brothers est fondé par Tom Rowlands et Ed Simons.',
+    bio: 'Initialement appelé The Dust Brothers, le groupe Chemical Brothers est fondé par Tom Rowlands et Ed Simons.',
     tags: ['electro'],
   },
   validBandToDeleteWithId: {
@@ -935,9 +939,11 @@ const deletePayloads = {
 
 describe('DELETE /bands', () => {
   beforeEach(async () => {
-    await Band.deleteMany({ code: postedBandCode }, (err) => {
-      if (err) console.log(err)
-    })
+    try {
+      await Band.deleteMany({ code: postedBandCode })
+    } catch (err) {
+      console.log(err)
+    }
     const res = await request(app)
       .post('/api/bands')
       .send(deletePayloads.validCompleteBand)
@@ -1157,8 +1163,10 @@ describe('DELETE /bands', () => {
 })
 
 afterAll(async () => {
-  await Band.deleteMany({ $or: [{ _id: bandIdsToClear }] }, (err) => {
-    if (err) console.log(err)
-  })
+  try {
+    await Band.deleteMany({ $or: [{ _id: bandIdsToClear }] })
+  } catch (err) {
+    console.log(err)
+  }
   await mongoose.connection.close()
 })

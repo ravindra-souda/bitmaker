@@ -5,6 +5,7 @@ export default async (res) => {
     if (mongoose.connection.readyState === 1) {
       return true
     }
+    mongoose.set('strictQuery', true)
     await mongoose.connect(
       `mongodb://${process.env.MONGODB_SERVER}:${process.env.MONGODB_PORT}/${process.env.MONGODB_NAME}`,
       {

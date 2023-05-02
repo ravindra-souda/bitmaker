@@ -11,13 +11,11 @@ export default async () => {
   if (!(await connect())) {
     return
   }
-  await Band.deleteMany({}, (err) => {
-    if (err) console.log(err)
-  })
-  await Album.deleteMany({}, (err) => {
-    if (err) console.log(err)
-  })
-  await Song.deleteMany({}, (err) => {
-    if (err) console.log(err)
-  })
+  try {
+    await Band.deleteMany({})
+    await Album.deleteMany({})
+    await Song.deleteMany({})
+  } catch (err) {
+    console.log(err)
+  }
 }

@@ -295,9 +295,11 @@ describe('POST /albums', () => {
   })
 
   afterAll(async () => {
-    await Band.deleteMany({ $or: [{ _id: bandIdsToClear }] }, (err) => {
-      if (err) console.log(err)
-    })
+    try {
+      await Band.deleteMany({ $or: [{ _id: bandIdsToClear }] })
+    } catch (err) {
+      console.log(err)
+    }
     bandIdsToClear = []
   })
 })
@@ -880,9 +882,11 @@ describe('GET /albums', () => {
   })
 
   afterAll(async () => {
-    await Band.deleteMany({ $or: [{ _id: bandIdsToClear }] }, (err) => {
-      if (err) console.log(err)
-    })
+    try {
+      await Band.deleteMany({ $or: [{ _id: bandIdsToClear }] })
+    } catch (err) {
+      console.log(err)
+    }
     bandIdsToClear = []
   })
 })
@@ -891,8 +895,7 @@ const patchPayloads = {
   validBandWithCode: {
     name: 'The Prodigy',
     formationYear: 1990,
-    bio:
-      'The Prodigy apparait sur la scène rave underground au début des années 1990, et atteint depuis lors une immense popularité et une renommée mondiale.',
+    bio: 'The Prodigy apparait sur la scène rave underground au début des années 1990, et atteint depuis lors une immense popularité et une renommée mondiale.',
     tags: ['breakbeat', 'rave'],
   },
   validBandWithId: {
@@ -1039,9 +1042,11 @@ describe('PATCH /albums', () => {
   })
 
   beforeEach(async () => {
-    await Album.deleteMany({ code: postedAlbumCode }, (err) => {
-      if (err) console.log(err)
-    })
+    try {
+      await Album.deleteMany({ code: postedAlbumCode })
+    } catch (err) {
+      console.log(err)
+    }
     let res = await request(app)
       .post(`/api/bands/${postedBandId}/albums`)
       .send(patchPayloads.validCompleteAlbumWithId)
@@ -1389,9 +1394,11 @@ describe('PATCH /albums', () => {
   })
 
   afterAll(async () => {
-    await Band.deleteMany({ $or: [{ _id: bandIdsToClear }] }, (err) => {
-      if (err) console.log(err)
-    })
+    try {
+      await Band.deleteMany({ $or: [{ _id: bandIdsToClear }] })
+    } catch (err) {
+      console.log(err)
+    }
     bandIdsToClear = []
   })
 })
@@ -1400,8 +1407,7 @@ const deletePayloads = {
   validCompleteBand: {
     name: 'The Verve',
     formationYear: 1990,
-    bio:
-      'Longtemps considéré comme un des groupes les plus innovants et captivants de la scène pop contemporaine britannique, The Verve fit finalement surface en 1997 avec le tube Bitter Sweet Symphony.',
+    bio: 'Longtemps considéré comme un des groupes les plus innovants et captivants de la scène pop contemporaine britannique, The Verve fit finalement surface en 1997 avec le tube Bitter Sweet Symphony.',
     tags: ['alternative-rock'],
   },
   validUnrelatedBand: {
@@ -1505,9 +1511,11 @@ describe('DELETE /albums', () => {
   })
 
   beforeEach(async () => {
-    await Album.deleteMany({ code: postedAlbumCode }, (err) => {
-      if (err) console.log(err)
-    })
+    try {
+      await Album.deleteMany({ code: postedAlbumCode })
+    } catch (err) {
+      console.log(err)
+    }
     const res = await request(app)
       .post(`/api/bands/${postedBandId}/albums`)
       .send(deletePayloads.validCompleteAlbum)
@@ -1815,9 +1823,11 @@ describe('DELETE /albums', () => {
   })
 
   afterAll(async () => {
-    await Band.deleteMany({ $or: [{ _id: bandIdsToClear }] }, (err) => {
-      if (err) console.log(err)
-    })
+    try {
+      await Band.deleteMany({ $or: [{ _id: bandIdsToClear }] })
+    } catch (err) {
+      console.log(err)
+    }
     bandIdsToClear = []
   })
 })

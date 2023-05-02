@@ -517,13 +517,13 @@ describe('POST /songs', () => {
   })
 
   afterAll(async () => {
-    await Band.deleteMany({ $or: [{ _id: bandIdsToClear }] }, (err) => {
-      if (err) console.log(err)
-    })
+    try {
+      await Band.deleteMany({ $or: [{ _id: bandIdsToClear }] })
+      await Album.deleteMany({ $or: [{ _id: albumIdsToClear }] })
+    } catch (err) {
+      console.log(err)
+    }
     bandIdsToClear = []
-    await Album.deleteMany({ $or: [{ _id: albumIdsToClear }] }, (err) => {
-      if (err) console.log(err)
-    })
     albumIdsToClear = []
   })
 })
@@ -1346,13 +1346,13 @@ describe('GET /songs', () => {
   })
 
   afterAll(async () => {
-    await Band.deleteMany({ $or: [{ _id: bandIdsToClear }] }, (err) => {
-      if (err) console.log(err)
-    })
+    try {
+      await Band.deleteMany({ $or: [{ _id: bandIdsToClear }] })
+      await Album.deleteMany({ $or: [{ _id: albumIdsToClear }] })
+    } catch (err) {
+      console.log(err)
+    }
     bandIdsToClear = []
-    await Album.deleteMany({ $or: [{ _id: albumIdsToClear }] }, (err) => {
-      if (err) console.log(err)
-    })
     albumIdsToClear = []
   })
 })
@@ -1361,15 +1361,13 @@ const patchPayloads = {
   validBandWithCode: {
     name: 'London Grammar',
     formationYear: 2009,
-    bio:
-      "La musique de London Grammar est minimaliste, mélange d'ambiances électroniques, soul et parfois plus classiques.",
+    bio: "La musique de London Grammar est minimaliste, mélange d'ambiances électroniques, soul et parfois plus classiques.",
     tags: ['indie-pop', 'electro'],
   },
   validBandWithId: {
     name: 'Clean Bandit',
     formationYear: 2008,
-    bio:
-      "Clean Bandit a connu le succès en mélangeant la musique classique et l'electro pour créer un son rythmé, souvent accompagné de guests de renom.",
+    bio: "Clean Bandit a connu le succès en mélangeant la musique classique et l'electro pour créer un son rythmé, souvent accompagné de guests de renom.",
     tags: ['electro-pop', 'house'],
   },
   validAlbumWithCode: {
@@ -1674,12 +1672,13 @@ describe('PATCH /songs', () => {
   })
 
   beforeEach(async () => {
-    await Song.deleteMany(
-      { $or: [{ _id: postedSongId }, { code: postedSongCode }] },
-      (err) => {
-        if (err) console.log(err)
-      }
-    )
+    try {
+      await Song.deleteMany({
+        $or: [{ _id: postedSongId }, { code: postedSongCode }],
+      })
+    } catch (err) {
+      console.log(err)
+    }
     let res = await request(app)
       .post(`/api/bands/${postedBandId}/albums/${postedAlbumId}/songs`)
       .send(patchPayloads.validCompleteSongWithId)
@@ -1887,9 +1886,8 @@ describe('PATCH /songs', () => {
       .post(`/api/albums/${postedAlbumId}/songs`)
       .send(patchPayloads.invalidDuplicatePosition.get('duplicate'))
     expect(res.statusCode).toEqual(201)
-    patchPayloads.invalidDuplicatePosition.get(
-      'samePositionSameAlbum'
-    )._id = postedSongId
+    patchPayloads.invalidDuplicatePosition.get('samePositionSameAlbum')._id =
+      postedSongId
     res = await request(app)
       .patch(`/api/albums/${postedAlbumId}/songs/${postedSongId}`)
       .send(patchPayloads.invalidDuplicatePosition.get('samePositionSameAlbum'))
@@ -1912,9 +1910,8 @@ describe('PATCH /songs', () => {
     expect(res.body.updatedSong).toMatchObject(
       patchPayloads.invalidDuplicatePosition.get('samePositionDifferentAlbum')
     )
-    patchPayloads.invalidDuplicatePosition.get(
-      'sameSongTitleEdited'
-    ).code = postedSongCode
+    patchPayloads.invalidDuplicatePosition.get('sameSongTitleEdited').code =
+      postedSongCode
     res = await request(app)
       .patch(`/api/albums/${postedAlbumCode}/songs/${postedSongCode}`)
       .send(patchPayloads.invalidDuplicatePosition.get('sameSongTitleEdited'))
@@ -2176,13 +2173,13 @@ describe('PATCH /songs', () => {
   })
 
   afterAll(async () => {
-    await Band.deleteMany({ $or: [{ _id: bandIdsToClear }] }, (err) => {
-      if (err) console.log(err)
-    })
+    try {
+      await Band.deleteMany({ $or: [{ _id: bandIdsToClear }] })
+      await Album.deleteMany({ $or: [{ _id: albumIdsToClear }] })
+    } catch (err) {
+      console.log(err)
+    }
     bandIdsToClear = []
-    await Album.deleteMany({ $or: [{ _id: albumIdsToClear }] }, (err) => {
-      if (err) console.log(err)
-    })
     albumIdsToClear = []
   })
 })
@@ -2191,8 +2188,7 @@ const deletePayloads = {
   validCompleteBand: {
     name: 'Etienne de Crécy',
     formationYear: 1992,
-    bio:
-      'Avec Super Discount en 1996, Etienne de Crécy contribue grandement à populariser la French touch.',
+    bio: 'Avec Super Discount en 1996, Etienne de Crécy contribue grandement à populariser la French touch.',
     tags: ['french-touch'],
   },
   validUnrelatedBand: {
@@ -2313,9 +2309,11 @@ describe('DELETE /songs', () => {
   })
 
   beforeEach(async () => {
-    await Song.deleteMany({ code: postedSongCode }, (err) => {
-      if (err) console.log(err)
-    })
+    try {
+      await Song.deleteMany({ code: postedSongCode })
+    } catch (err) {
+      console.log(err)
+    }
     let res = await request(app)
       .post(`/api/bands/${postedBandId}/albums/${postedAlbumId}/songs`)
       .send(deletePayloads.validSongToDeleteWithId)
@@ -2731,13 +2729,13 @@ describe('DELETE /songs', () => {
   })
 
   afterAll(async () => {
-    await Album.deleteMany({ $or: [{ _id: albumIdsToClear }] }, (err) => {
-      if (err) console.log(err)
-    })
+    try {
+      await Album.deleteMany({ $or: [{ _id: albumIdsToClear }] })
+      await Band.deleteMany({ $or: [{ _id: bandIdsToClear }] })
+    } catch (err) {
+      console.log(err)
+    }
     albumIdsToClear = []
-    await Band.deleteMany({ $or: [{ _id: bandIdsToClear }] }, (err) => {
-      if (err) console.log(err)
-    })
     bandIdsToClear = []
   })
 })
