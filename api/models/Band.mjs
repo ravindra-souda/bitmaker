@@ -72,10 +72,14 @@ bandSchema.pre('save', function (next) {
   this.code = slugify(this.name)
   next()
 })
-bandSchema.pre('remove', async function (next) {
-  await Album.deleteMany({ band: this._id })
-  next()
-})
+bandSchema.pre(
+  'deleteOne',
+  { document: true, query: false },
+  async function (next) {
+    await Album.deleteMany({ band: this._id })
+    next()
+  }
+)
 
 // needed for the recursion-free populate
 bandSchema.options.selectPopulatedPaths = false

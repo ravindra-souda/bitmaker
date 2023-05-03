@@ -17,22 +17,24 @@ export default {
       return
     }
 
-    Band.find(filters, null, options, (err, docs) => {
-      if (err) {
-        res.status(500).json({
-          error: res.translations.app.errors.mongoDb,
-        })
-        return
-      }
-      if (docs.length === 0) {
-        res.status(404).json({
-          error: res.translations.band.errors.notFound,
-          filters: filters,
-        })
-        return
-      }
-      res.status(200).json(docs)
-    })
+    let foundBands
+    try {
+      foundBands = await Band.find(filters, null, options)
+    } catch (err) {
+      res.status(500).json({
+        error: res.translations.app.errors.mongoDb,
+      })
+      return
+    }
+
+    if (foundBands.length === 0) {
+      res.status(404).json({
+        error: res.translations.band.errors.notFound,
+        filters,
+      })
+      return
+    }
+    res.status(200).json(foundBands)
   },
 
   post: async (req, res) => {
@@ -56,17 +58,18 @@ export default {
       return
     }
 
-    userBand.save((err, doc) => {
-      if (err) {
-        let errMessages = jsonQuery('errors[**].message', { data: err })
-        res.status(400).json({
-          error: res.translations.band.errors.validation,
-          messages: t(res.translations, errMessages),
-        })
-        return
-      }
-      res.status(201).json(doc)
-    })
+    let savedBand
+    try {
+      savedBand = await userBand.save()
+    } catch (err) {
+      let errMessages = jsonQuery('errors[**].message', { data: err })
+      res.status(400).json({
+        error: res.translations.band.errors.validation,
+        messages: t(res.translations, errMessages),
+      })
+      return
+    }
+    res.status(201).json(savedBand)
   },
 
   patch: async (req, res) => {
@@ -85,19 +88,20 @@ export default {
       return
     }
 
-    await bandToUpdate.save((err, doc) => {
-      if (err) {
-        let errMessages = jsonQuery('errors[**].message', { data: err })
-        res.status(400).json({
-          error: res.translations.band.errors.validation,
-          messages: t(res.translations, errMessages),
-        })
-        return
-      }
-      res.status(200).json({
-        updatedBand: doc,
-        originalBand: originalBand,
+    let updatedBand
+    try {
+      updatedBand = await bandToUpdate.save()
+    } catch (err) {
+      let errMessages = jsonQuery('errors[**].message', { data: err })
+      res.status(400).json({
+        error: res.translations.band.errors.validation,
+        messages: t(res.translations, errMessages),
       })
+      return
+    }
+    res.status(200).json({
+      updatedBand,
+      originalBand,
     })
   },
 
@@ -117,17 +121,18 @@ export default {
       return
     }
 
-    await bandToDelete.remove((err, doc) => {
-      if (err) {
-        res.status(500).json({
-          error: res.translations.band.errors.delete,
-        })
-        return
-      }
-      res.status(200).json({
-        success: res.translations.band.success.delete,
-        deleted: doc,
+    let deletedBand
+    try {
+      deletedBand = await bandToDelete.deleteOne()
+    } catch (err) {
+      res.status(500).json({
+        error: res.translations.band.errors.delete,
       })
+      return
+    }
+    res.status(200).json({
+      success: res.translations.band.success.delete,
+      deleted: deletedBand,
     })
   },
 }

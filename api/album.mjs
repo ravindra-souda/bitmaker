@@ -39,22 +39,24 @@ export default {
       delete filters.releaseYear
     }
 
-    Album.find(filters, null, options, (err, docs) => {
-      if (err) {
-        res.status(500).json({
-          error: res.translations.app.errors.mongoDb,
-        })
-        return
-      }
-      if (docs.length === 0) {
-        res.status(404).json({
-          error: res.translations.album.errors.notFound,
-          filters: filters,
-        })
-        return
-      }
-      res.status(200).json(docs)
-    })
+    let foundAlbums
+    try {
+      foundAlbums = await Album.find(filters, null, options)
+    } catch (err) {
+      res.status(500).json({
+        error: res.translations.app.errors.mongoDb,
+      })
+      return
+    }
+
+    if (foundAlbums.length === 0) {
+      res.status(404).json({
+        error: res.translations.album.errors.notFound,
+        filters,
+      })
+      return
+    }
+    res.status(200).json(foundAlbums)
   },
 
   post: async (req, res) => {
@@ -72,7 +74,7 @@ export default {
     if (relatedBand === null) {
       res.status(404).json({
         error: res.translations.band.errors.notFound,
-        filters: filters,
+        filters,
       })
       return
     }
@@ -101,21 +103,21 @@ export default {
 
     // update the related Band with the newly created Album
     relatedBand.albums.push(userAlbum._id)
-    await relatedBand.save((err) => {
-      if (err) {
-        let errMessages = jsonQuery('errors[**].message', { data: err })
-        res.status(500).json({
-          error: res.translations.album.errors.updateBand,
-          messages: errMessages.value,
-        })
-        savedAlbum.remove()
-        return
-      }
-      // populate the related band (translate the band's object id to the actual document)
-      savedAlbum.populate('band', (err, doc) => {
-        res.status(201).json(doc)
+    try {
+      await relatedBand.save()
+    } catch (err) {
+      let errMessages = jsonQuery('errors[**].message', { data: err })
+      res.status(500).json({
+        error: res.translations.album.errors.updateBand,
+        messages: errMessages.value,
       })
-    })
+      savedAlbum.remove()
+      return
+    }
+
+    // populate the related band (translate the band's object id to the actual document)
+    const returnedAlbum = await savedAlbum.populate('band')
+    res.status(201).json(returnedAlbum)
   },
 
   patch: async (req, res) => {
@@ -146,22 +148,23 @@ export default {
       return
     }
 
-    await albumToUpdate.save((err, updatedAlbum) => {
-      if (err) {
-        let errMessages = jsonQuery('errors[**].message', { data: err })
-        res.status(400).json({
-          error: res.translations.album.errors.validation,
-          messages: t(res.translations, errMessages),
-        })
-        return
-      }
-      // populate the related band (translate the band's object id to the actual document)
-      updatedAlbum.populate('band', (err, doc) => {
-        res.status(200).json({
-          updatedAlbum: doc,
-          originalAlbum: originalAlbum,
-        })
+    let updatedAlbum
+    try {
+      updatedAlbum = await albumToUpdate.save()
+    } catch (err) {
+      let errMessages = jsonQuery('errors[**].message', { data: err })
+      res.status(400).json({
+        error: res.translations.album.errors.validation,
+        messages: t(res.translations, errMessages),
       })
+      return
+    }
+
+    // populate the related band (translate the band's object id to the actual document)
+    const returnedAlbum = await updatedAlbum.populate('band')
+    res.status(200).json({
+      updatedAlbum: returnedAlbum,
+      originalAlbum,
     })
   },
 
@@ -184,25 +187,25 @@ export default {
       return
     }
 
-    await albumToDelete.remove((err, doc) => {
-      if (err) {
-        res.status(500).json({
-          error: res.translations.album.errors.delete,
-        })
-        return
-      }
-
-      // removes the deleted album reference from the band
-      relatedBand.albums.pull(doc._id)
-      relatedBand.save()
-
-      // populate the related band (translate the band's object id to the actual document)
-      doc.populate('band', (err, doc) => {
-        res.status(200).json({
-          success: res.translations.album.success.delete,
-          deleted: doc,
-        })
+    let deletedAlbum
+    try {
+      deletedAlbum = await albumToDelete.deleteOne()
+    } catch (err) {
+      res.status(500).json({
+        error: res.translations.album.errors.delete,
       })
+      return
+    }
+
+    // removes the deleted album reference from the band
+    relatedBand.albums.pull(deletedAlbum._id)
+    relatedBand.save()
+
+    // populate the related band (translate the band's object id to the actual document)
+    const returnedAlbum = await deletedAlbum.populate('band')
+    res.status(200).json({
+      success: res.translations.album.success.delete,
+      deleted: returnedAlbum,
     })
   },
 }

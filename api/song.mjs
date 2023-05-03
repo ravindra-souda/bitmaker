@@ -61,22 +61,24 @@ export default {
       return
     }
 
-    Song.find(filters, null, options, (err, docs) => {
-      if (err) {
-        res.status(500).json({
-          error: res.translations.app.errors.mongoDb,
-        })
-        return
-      }
-      if (docs.length === 0) {
-        res.status(404).json({
-          error: res.translations.song.errors.notFound,
-          filters,
-        })
-        return
-      }
-      res.status(200).json(docs)
-    })
+    let foundSongs
+    try {
+      foundSongs = await Song.find(filters, null, options)
+    } catch (err) {
+      res.status(500).json({
+        error: res.translations.app.errors.mongoDb,
+      })
+      return
+    }
+
+    if (foundSongs.length === 0) {
+      res.status(404).json({
+        error: res.translations.song.errors.notFound,
+        filters,
+      })
+      return
+    }
+    res.status(200).json(foundSongs)
   },
 
   post: async (req, res) => {
@@ -133,21 +135,21 @@ export default {
 
     // update the related Album with the newly created Song
     relatedAlbum.songs.push(userSong._id)
-    await relatedAlbum.save((err) => {
-      if (err) {
-        let errMessages = jsonQuery('errors[**].message', { data: err })
-        res.status(500).json({
-          error: res.translations.song.errors.updateAlbum,
-          messages: errMessages.value,
-        })
-        savedSong.remove()
-        return
-      }
-      // populate the related album (translate the album's object id to the actual document)
-      savedSong.populate('album', (err, doc) => {
-        res.status(201).json(doc)
+    try {
+      await relatedAlbum.save()
+    } catch (err) {
+      let errMessages = jsonQuery('errors[**].message', { data: err })
+      res.status(500).json({
+        error: res.translations.song.errors.updateAlbum,
+        messages: errMessages.value,
       })
-    })
+      savedSong.deleteOne()
+      return
+    }
+
+    // populate the related album (translate the album's object id to the actual document)
+    const returnedSong = await savedSong.populate('album')
+    res.status(201).json(returnedSong)
   },
 
   patch: async (req, res) => {
@@ -215,11 +217,10 @@ export default {
     }
 
     // populate the related album (translate the album's object id to the actual document)
-    updatedSong.populate('album', (err, doc) => {
-      res.status(200).json({
-        updatedSong: doc,
-        originalSong,
-      })
+    const returnedSong = await updatedSong.populate('album')
+    res.status(200).json({
+      updatedSong: returnedSong,
+      originalSong,
     })
   },
 
@@ -255,25 +256,25 @@ export default {
       return
     }
 
-    await songToDelete.remove((err, doc) => {
-      if (err) {
-        res.status(500).json({
-          error: res.translations.song.errors.delete,
-        })
-        return
-      }
-
-      // removes the deleted song reference from the album
-      relatedAlbum.songs.pull(doc._id)
-      relatedAlbum.save()
-
-      // populate the related album (translate the album's object id to the actual document)
-      doc.populate('album', (err, doc) => {
-        res.status(200).json({
-          success: res.translations.song.success.delete,
-          deleted: doc,
-        })
+    let deletedSong
+    try {
+      deletedSong = await songToDelete.deleteOne()
+    } catch (err) {
+      res.status(500).json({
+        error: res.translations.song.errors.delete,
       })
+      return
+    }
+
+    // removes the deleted song reference from the album
+    relatedAlbum.songs.pull(deletedSong._id)
+    relatedAlbum.save()
+
+    // populate the related album (translate the album's object id to the actual document)
+    const returnedSong = await deletedSong.populate('album')
+    res.status(200).json({
+      success: res.translations.song.success.delete,
+      deleted: returnedSong,
     })
   },
 }
